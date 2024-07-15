@@ -138,6 +138,11 @@ namespace LVM
 			));
 		}
 
+		public bool DecodeK()
+		{
+			return (b & 0b1000_0000u) != 0;
+		}
+
 		public byte DecodeB()
 		{
 			return c;
@@ -181,111 +186,6 @@ namespace LVM
 				(((uint)c) << 9) |
 				(((uint)d) << 17)
 			) + 1) - (1 << 24);
-		}
-	}
-
-	public struct LuaIABCInstruction
-	{
-		public required byte A;
-		public required bool k;
-		public required byte B;
-		public required byte C;
-	}
-
-	public struct LuaIABx
-	{
-		public required byte A;
-		public required uint Bx;
-	}
-
-	public struct LuaIAsBx
-	{
-		public required byte A;
-		public required int sBx;
-	}
-
-	public struct LuaIAx
-	{
-		public required uint Ax;
-	}
-
-	public struct LuaIsJ
-	{
-		public required int sJ;
-	}
-
-	public static class InstructionDecoder
-	{
-		public static InstructionEnum GetOpcode(LuaInstruction instruction)
-		{
-			return (InstructionEnum)(instruction.a & 0b0111_1111u);
-		}
-
-		public static LuaIABCInstruction DecodeIABC(LuaInstruction instruction)
-		{
-			return new LuaIABCInstruction
-			{
-				A = unchecked((byte)(
-					((instruction.a & 0b1000_0000u) >> 7) | ((instruction.b & 0b0111_1111u) << 1)
-				)),
-				k = (instruction.b & 0b1000_0000u) != 0,
-				B = instruction.c,
-				C = instruction.d
-			};
-		}
-
-		public static LuaIABx DecodeIABx(LuaInstruction instruction)
-		{
-			return new LuaIABx
-			{
-				A = unchecked((byte)(
-					((instruction.a & 0b1000_0000u) >> 7) | ((instruction.b & 0b0111_1111u) << 1)
-				)),
-				Bx = ((instruction.b & 0b1000_0000u) >> 7) |
-					(((uint)instruction.c) << 1) |
-					(((uint)instruction.d) << 9)
-			};
-		}
-
-		public static LuaIAsBx DecodeIAsBx(LuaInstruction instruction)
-		{
-			return new LuaIAsBx
-			{
-				A = unchecked((byte)(
-					((instruction.a & 0b1000_0000u) >> 7) | ((instruction.b & 0b0111_1111u) << 1)
-				)),
-				sBx = unchecked((int)(
-					((instruction.b & 0b1000_0000u) >> 7) |
-					(((uint)instruction.c) << 1) |
-					(((uint)instruction.d) << 9)
-				) + 1) - (1 << 16)
-			};
-		}
-
-		public static LuaIAx DecodeAx(LuaInstruction instruction)
-		{
-			return new LuaIAx
-			{
-				Ax = unchecked((uint)(
-					((instruction.a & 0b1000_0000u) >> 7) |
-					((instruction.b & 0b1111_1111u) << 1) |
-					(((uint)instruction.c) << 9) |
-					(((uint)instruction.d) << 17)
-				))
-			};
-		}
-
-		public static LuaIsJ DecodeIsJ(LuaInstruction instruction)
-		{
-			return new LuaIsJ
-			{
-				sJ = unchecked((int)(
-					((instruction.a & 0b1000_0000u) >> 7) |
-					((instruction.b & 0b1111_1111u) << 1) |
-					(((uint)instruction.c) << 9) |
-					(((uint)instruction.d) << 17)
-				) + 1) - (1 << 24)
-			};
 		}
 	}
 }
