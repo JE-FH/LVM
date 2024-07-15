@@ -38,19 +38,19 @@ namespace LVM
 		public byte readSize = _readSize;
 	}
 
-	public class UnexpectedCheckIntegerException(LuaInteger _readInteger, string? message) : Exception(message)
+	public class UnexpectedCheckIntegerException(long _readInteger, string? message) : Exception(message)
 	{
-		public LuaInteger readInteger = _readInteger;
+		public long readInteger = _readInteger;
 	}
 
-	public class UnexpectedCheckNumberException(LuaNumber _readNumber, string? message) : Exception(message)
+	public class UnexpectedCheckNumberException(double _readNumber, string? message) : Exception(message)
 	{
-		public LuaNumber readNumber = _readNumber;
+		public double readNumber = _readNumber;
 	}
 
 	public class UnknownConstantTypeException(byte _readConstantType, string? message) : Exception(message)
 	{
-		public LuaNumber readConstantType = _readConstantType;
+		public double readConstantType = _readConstantType;
 	}
 
 	public enum LuaType : byte
@@ -135,13 +135,13 @@ namespace LVM
 				throw new UnexpectedNumberSizeException(numberSize, $"Unexpected number size {numberSize}, expected: {expectedNumberSize}");
 			}
 
-			LuaInteger checkInteger = byteStream.ReadLongOrThrow("Check integer");
+			long checkInteger = byteStream.ReadLongOrThrow("Check integer");
 			if (checkInteger != luaCInt)
 			{
 				throw new UnexpectedCheckIntegerException(checkInteger, $"Unexpected check integer value 0x{checkInteger:X}, expected 0x{luaCInt:X}");
 			}
 
-			LuaNumber checkNumber = byteStream.ReadDoubleOrThrow("Check number");
+			double checkNumber = byteStream.ReadDoubleOrThrow("Check number");
 			if (checkNumber != luaCNumber)
 			{
 				throw new UnexpectedCheckNumberException(checkNumber, $"Unexpected check number value 0x{checkNumber}, expected {luaCNumber}");
@@ -295,7 +295,7 @@ namespace LVM
 				lineDefined = lineDefined,
 				lastLineDefined = lastLineDefined,
 				numParams = numParams,
-				isVararg = isVararg,
+				isVarArg = isVararg,
 				maxStackSize = maxStackSize,
 				code = code,
 				constants = constants,
@@ -349,14 +349,14 @@ namespace LVM
 		public readonly bool value = _value;
 	}
 
-	public class LuaIntegerConstant(LuaInteger _value) : ILuaConstant
+	public class LuaIntegerConstant(long _value) : ILuaConstant
 	{
-		public readonly LuaInteger value = _value;
+		public readonly long value = _value;
 	}
 
-	public class LuaFloatConstant(LuaNumber _value) : ILuaConstant
+	public class LuaFloatConstant(double _value) : ILuaConstant
 	{
-		public readonly LuaNumber value = _value;
+		public readonly double value = _value;
 	}
 
 	public class LuaNilConstant : ILuaConstant
@@ -392,13 +392,13 @@ namespace LVM
 		public required byte[][] upValueNames;
 	}
 
-	public class LuaProto
+	public struct LuaProto
 	{
 		public required byte[] source;
 		public required int lineDefined;
 		public required int lastLineDefined;
 		public required byte numParams;
-		public required bool isVararg;
+		public required bool isVarArg;
 		public required byte maxStackSize;
 		public required LuaInstruction[] code;
 		public required ILuaConstant[] constants;

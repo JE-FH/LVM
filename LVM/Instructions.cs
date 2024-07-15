@@ -119,7 +119,7 @@ namespace LVM
 		ExtraArg/*   Ax      extra (larger) argument for previous opcode     */
 	}
 
-	public class LuaInstruction(Span<byte> bytes)
+	public struct LuaInstruction(Span<byte> bytes)
 	{
 		public readonly byte a = bytes[0];
 		public readonly byte b = bytes[1];

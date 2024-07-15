@@ -1,6 +1,13 @@
-﻿namespace LVM
+﻿using System.Reflection.Metadata;
+
+namespace LVM
 {
-	interface IStateTransition
+	public class ExtraArgInstructionReachedException(int _pc) : Exception("Extra arg instruction was reached")
+	{
+		public int pc = _pc;
+	}
+
+	public interface IStateTransition
 	{
 		void Execute(CallInfo ci, LuaState luaState);
 	}
@@ -18,7 +25,7 @@
 	{
 		public void Execute(CallInfo ci, LuaState luaState)
 		{
-			luaState.stack[ci.stackBase + A] = new LuaStackInteger(sBx);
+			luaState.stack[ci.stackBase + A] = new LuaInteger(sBx);
 			ci.pc++;
 		}
 	}
@@ -27,7 +34,7 @@
 	{
 		public void Execute(CallInfo ci, LuaState luaState)
 		{
-			luaState.stack[ci.stackBase + A] = new LuaStackNumber(sBx);
+			luaState.stack[ci.stackBase + A] = new LuaNumber(sBx);
 			ci.pc++;
 		}
 	}
@@ -41,7 +48,7 @@
 		}
 	}
 
-	public class TrLoadKX(byte A, IRuntimeValue constant) : IStateTransition
+	public class TrLoadKx(byte A, IRuntimeValue constant) : IStateTransition
 	{
 		public void Execute(CallInfo ci, LuaState luaState)
 		{
@@ -54,7 +61,7 @@
 	{
 		public void Execute(CallInfo ci, LuaState luaState)
 		{
-			luaState.stack[ci.stackBase + A] = new LuaStackBool(false);
+			luaState.stack[ci.stackBase + A] = new LuaBool(false);
 			ci.pc++;
 		}
 	}
@@ -63,7 +70,7 @@
 	{
 		public void Execute(CallInfo ci, LuaState luaState)
 		{
-			luaState.stack[ci.stackBase + A] = new LuaStackBool(false);
+			luaState.stack[ci.stackBase + A] = new LuaBool(false);
 			ci.pc += 2;
 		}
 	}
@@ -72,7 +79,7 @@
 	{
 		public void Execute(CallInfo ci, LuaState luaState)
 		{
-			luaState.stack[ci.stackBase + A] = new LuaStackBool(true);
+			luaState.stack[ci.stackBase + A] = new LuaBool(true);
 			ci.pc++;
 		}
 	}
@@ -82,7 +89,7 @@
 		public void Execute(CallInfo ci, LuaState luaState)
 		{
 			for (int i = A; i < A + B; ++i) {
-				luaState.stack[ci.stackBase + i] = new LuaStackNil();
+				luaState.stack[ci.stackBase + i] = new LuaNil();
 			}
 			ci.pc++;
 		}
@@ -116,7 +123,7 @@
 	{
 		public void Execute(CallInfo ci, LuaState luaState)
 		{
-			LuaStackTable table = (LuaStackTable) luaState.stack[ci.stackBase + B];
+			LuaTable table = (LuaTable) luaState.stack[ci.stackBase + B];
 			luaState.stack[ci.stackBase + A] = table.GetValue(luaState.stack[ci.stackBase + C]);
 			ci.pc += 1;
 		}
@@ -126,18 +133,18 @@
 	{
 		public void Execute(CallInfo ci, LuaState luaState)
 		{
-			LuaStackTable table = (LuaStackTable) luaState.stack[ci.stackBase + B];
+			LuaTable table = (LuaTable) luaState.stack[ci.stackBase + B];
 			luaState.stack[ci.stackBase + A] = table.GetValue(C);
 			ci.pc += 1;
 		}
 	}
 
 	//The constant can only be a short string to conform with the native lua VM
-	public class TrGetField(byte A, byte B, LuaStackString constant) : IStateTransition {
+	public class TrGetField(byte A, byte B, byte[] KC) : IStateTransition {
 		public void Execute(CallInfo ci, LuaState luaState)
 		{
-			LuaStackTable table = (LuaStackTable)luaState.stack[ci.stackBase + B];
-			luaState.stack[ci.stackBase + A] = table.GetValue(constant.value);
+			LuaTable table = (LuaTable)luaState.stack[ci.stackBase + B];
+			luaState.stack[ci.stackBase + A] = table.GetValue(KC);
 			ci.pc++;
 		}
 	}
@@ -150,23 +157,82 @@
 		}
 	}
 
-	public class TrSetTableK(byte A, byte B, IRuntimeValue constant) : IStateTransition
+	public class TrSetTableK(byte A, byte B, IRuntimeValue KC) : IStateTransition
 	{
 		public void Execute(CallInfo ci, LuaState luaState)
 		{
-			LuaStackTable table = (LuaStackTable)luaState.stack[ci.stackBase + A];
-			table.SetValue(luaState.stack[ci.stackBase + B], constant);
+			LuaTable table = (LuaTable)luaState.stack[ci.stackBase + A];
+			table.SetValue(luaState.stack[ci.stackBase + B], KC);
 			ci.pc += 1;
 		}
 	}
 
-	public class TrSetTable(byte A, byte B, byte C) : IStateTransition
+	public class TrSetTableC(byte A, byte B, byte C) : IStateTransition
 	{
 		public void Execute(CallInfo ci, LuaState luaState)
 		{
-			LuaStackTable table = (LuaStackTable)luaState.stack[ci.stackBase + A];
+			LuaTable table = (LuaTable)luaState.stack[ci.stackBase + A];
 			table.SetValue(luaState.stack[ci.stackBase + B], luaState.stack[ci.stackBase + C]);
 			ci.pc += 1;
 		}
  	}
+
+	public class TrSetIK(byte A, byte B, IRuntimeValue KC) : IStateTransition
+	{
+		public void Execute(CallInfo ci, LuaState luaState)
+		{
+			LuaTable table = (LuaTable)luaState.stack[ci.stackBase + A];
+			table.SetValue(B, KC);
+			ci.pc += 1;
+		}
+	}
+
+	public class TrSetIR(byte A, byte B, byte C) : IStateTransition
+	{
+		public void Execute(CallInfo ci, LuaState luaState)
+		{
+			LuaTable table = (LuaTable)luaState.stack[ci.stackBase + A];
+			table.SetValue(B, luaState.stack[ci.stackBase + C]);
+			ci.pc += 1;
+		}
+	}
+
+	//The constant can only be a short string to conform with the native lua VM
+	public class TrSetFieldK(byte A, byte[] KB, IRuntimeValue KC) : IStateTransition
+	{
+		public void Execute(CallInfo ci, LuaState luaState)
+		{
+			LuaTable table = (LuaTable)luaState.stack[ci.stackBase + A];
+			table.SetValue(KB, KC);
+			ci.pc += 1;
+		}
+	}
+
+	//The constant can only be a short string to conform with the native lua VM
+	public class TrSetFieldR(byte A, byte[] KB, byte C) : IStateTransition
+	{
+		public void Execute(CallInfo ci, LuaState luaState)
+		{
+			LuaTable table = (LuaTable)luaState.stack[ci.stackBase + A];
+			table.SetValue(KB, luaState.stack[ci.stackBase = C]);
+			ci.pc += 1;
+		}
+	}
+
+	//Use all the arguments, including extraarg to construct the table
+	public class TrNewTable(byte A) : IStateTransition
+	{
+		public void Execute(CallInfo ci, LuaState luaState)
+		{
+			luaState.stack[ci.stackBase + A] = new LuaTable();
+		}
+	}
+
+	public class TrExtraArg() : IStateTransition
+	{
+		public void Execute(CallInfo ci, LuaState luaState)
+		{
+			throw new ExtraArgInstructionReachedException(ci.pc);
+		}
+	}
 }

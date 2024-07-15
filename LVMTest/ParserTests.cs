@@ -95,7 +95,7 @@ namespace LVMTest
 			Assert.Equal(0, parsed.lineDefined);
 			Assert.Equal(0, parsed.lastLineDefined);
 			Assert.Equal(0, parsed.numParams);
-			Assert.True(parsed.isVararg);
+			Assert.True(parsed.isVarArg);
 			Assert.Equal(2, parsed.maxStackSize);
 			Assert.Equal(15, parsed.code.Length);
 			Assert.Equal(4, parsed.constants.Length);

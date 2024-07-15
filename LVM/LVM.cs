@@ -1,58 +1,65 @@
 ﻿namespace LVM
 {
-	using LuaInteger = long;
-	using LuaNumber = double;
-
 	public class InvalidInstructionException(LuaInstruction _instruction, string? message) : Exception(message)
 	{
 		public LuaInstruction instruction = _instruction;
 	}
 
-	public class InvalidInstructionParam(LuaInstruction _instruction, string? message) : Exception(message)
+	public class InvalidInstructionParamException(LuaInstruction _instruction, string? message) : Exception(message)
 	{
 		public LuaInstruction instruction = _instruction;
 	}
 
-	public class CallInfo(LuaStackClosure closure)
+	public class ExpectedExtraArgException(string? message) : Exception(message)
 	{
-		public int pc = 0;
-		public LuaStackClosure closure;
-		public int stackBase = 0;
+
+	}
+
+	public class UnexpectedConstantType(string? message) : Exception(message)
+	{
+
 	}
 
 	public interface IRuntimeValue
 	{
-
+		public string TypeName { get; }
 	}
 
-	internal class LuaStackNumber(double _value) : IRuntimeValue
+	internal class LuaNumber(double _value) : IRuntimeValue
 	{
-		public LuaNumber value;
+		public double value = _value;
+		public string TypeName => "number";
 	}
 
-	internal class LuaStackInteger(long _value) : IRuntimeValue
+	internal class LuaInteger(long _value) : IRuntimeValue
 	{
-		public LuaInteger value;
+		public long value = _value;
+		public string TypeName => "integer";
 	}
 
-	internal class LuaStackNil() : IRuntimeValue { }
+	internal class LuaNil() : IRuntimeValue {
+		public string TypeName => "nil";
+	}
 
-	internal class LuaStackClosure(LuaProto _proto) : IRuntimeValue
+	public class LuaClosure(LuaRuntimeProto _proto) : IRuntimeValue
 	{
-		public LuaProto proto = _proto;
+		public LuaRuntimeProto proto = _proto;
+		public string TypeName => "closure";
 	}
 
-	public class LuaStackString(byte[] _value) : IRuntimeValue
+	public class LuaString(byte[] _value) : IRuntimeValue
 	{
 		public byte[] value = _value;
+		public string TypeName => "string";
 	}
 
-	internal class LuaStackBool(bool _value) : IRuntimeValue
+	internal class LuaBool(bool _value) : IRuntimeValue
 	{
 		public bool value = _value;
+		public string TypeName => "bool";
 	}
 
-	internal class LuaStackTable() : IRuntimeValue
+	internal class LuaTable() : IRuntimeValue
 	{
 		public IRuntimeValue GetValue(IRuntimeValue index)
 		{
@@ -83,6 +90,27 @@
 		{
 			throw new NotImplementedException();
 		}
+		public string TypeName => "table";
+	}
+
+	public class LuaRuntimeProto {
+		public required byte[] source;
+		public required int lineDefined;
+		public required int lastLineDefined;
+		public required byte numParams;
+		public required bool isVarArg;
+		public required byte maxStackSize;
+		public required IStateTransition[] transitions;
+		public required LuaUpValue[] upValues;
+		public required LuaRuntimeProto[] protos;
+		public required LuaCFunctionDebugInfo debugInfo;
+	}
+
+	public class CallInfo(LuaClosure _closure)
+	{
+		public int pc = 0;
+		public LuaClosure closure = _closure;
+		public int stackBase = 0;
 	}
 
 	public class LuaState()
@@ -96,17 +124,17 @@
 		public static void RunFile(LuaCFile file)
 		{
 			var state = new LuaState();
-			var closure = new LuaStackClosure(file.topLevelFunction);
+			var closure = new LuaClosure(MapProtoToRuntime(file.topLevelFunction));
 			state.stack.Add(closure);
 			Call(state, 0);
 		}
 
 		private static void Call(LuaState luaState, int index)
 		{
-			var closure = (LuaStackClosure)luaState.stack[index];
+			var closure = (LuaClosure)luaState.stack[index];
 			for (int i = luaState.stack.Count; i < index + 1 + closure.proto.maxStackSize; i++)
 			{
-				luaState.stack.Add(new LuaStackNil());
+				luaState.stack.Add(new LuaNil());
 			}
 			var callInfo = new CallInfo(closure);
 			luaState.callStack.Add(callInfo);
@@ -122,220 +150,151 @@
 
 			var callInfo = luaState.callStack[luaState.callStack.Count];
 
-			var instruction = callInfo.closure.proto.code[callInfo.pc];
-			var opcode = instruction.DecodeOpCode();
-			switch (opcode) {
-				case InstructionEnum.Move:
-					LVMTransitions.Move(callInfo, luaState, instruction.DecodeA(), instruction.DecodeB());
-					break;
-				case InstructionEnum.LoadI:
-					LVMTransitions.LoadI(callInfo, luaState, instruction.DecodeA(), instruction.DecodeSBx());
-					break;
-				case InstructionEnum.LoadF:
-					LVMTransitions.LoadF(callInfo, luaState, instruction.DecodeA(), instruction.DecodeSBx());
-					break;
-				default:
-					throw new InvalidInstructionException(instruction, $"unrecognized opcode {opcode}");
-			}
+			var nextTransition = callInfo.closure.proto.transitions[callInfo.pc];
+
+			nextTransition.Execute(callInfo, luaState);
 
 			return true;
 		}
-	}
 
-	internal class LVMTransitions
-	{
 		private static IRuntimeValue ConstantToValue(ILuaConstant constant)
 		{
 			return constant switch
 			{
-				LuaStringConstant s => new LuaStackString(s.data),
-				LuaBoolConstant b => new LuaStackBool(b.value),
-				LuaIntegerConstant i => new LuaStackInteger(i.value),
-				LuaFloatConstant f => new LuaStackNumber(f.value),
-				LuaNilConstant => new LuaStackNil(),
+				LuaStringConstant s => new LuaString(s.data),
+				LuaBoolConstant b => new LuaBool(b.value),
+				LuaIntegerConstant i => new LuaInteger(i.value),
+				LuaFloatConstant f => new LuaNumber(f.value),
+				LuaNilConstant => new LuaNil(),
 				_ => throw new Exception("Unknown constant value")
 			};
 		}
 
-		public static void Move(CallInfo ci, LuaState luaState, byte A, byte B)
+		private static T CheckedConstant<T>(ILuaConstant constant)
 		{
-			luaState.stack[ci.stackBase + A] = luaState.stack[ci.stackBase + B];
-			ci.pc++;
-		}
-
-		public static void LoadI(CallInfo ci, LuaState luaState, byte A, int sBx)
-		{
-			luaState.stack[ci.stackBase + A] = new LuaStackInteger(sBx);
-			ci.pc++;
-		}
-
-		public static void LoadF(CallInfo ci, LuaState luaState, byte A, int sBx)
-		{
-			luaState.stack[ci.stackBase + A] = new LuaStackNumber(sBx);
-			ci.pc++;
-		}
-
-		public static void LoadK(CallInfo ci, LuaState luaState, byte A, uint Bx)
-		{
-			var constant = ci.closure.proto.constants[Bx];
-			luaState.stack[ci.stackBase + A] = ConstantToValue(constant);
-			ci.pc++;
-		}
-
-		public static void LoadKX(CallInfo ci, LuaState luaState, byte A)
-		{
-			var nextInstruction = ci.closure.proto.code[ci.pc + 1];
-			if (nextInstruction.DecodeOpCode() != InstructionEnum.ExtraArg)
+			var runtimeValue = ConstantToValue(constant);
+			if (runtimeValue is T checkedValue)
 			{
-				throw new InvalidInstructionException(nextInstruction, "Expected ExtraArg opcode to follow LoadK");
+				return checkedValue;
 			}
-			var Ax = nextInstruction.DecodeAx();
-			var constant = ci.closure.proto.constants[Ax];
-			luaState.stack[ci.stackBase + A] = ConstantToValue(constant);
-			ci.pc += 2;
-		}
-
-		public static void LoadFalse(CallInfo ci, LuaState luaState, byte A)
-		{
-			luaState.stack[ci.stackBase + A] = new LuaStackBool(false);
-			ci.pc++;
-		}
-
-		public static void LFalseSkip(CallInfo ci, LuaState luaState, byte A)
-		{
-			luaState.stack[ci.stackBase + A] = new LuaStackBool(false);
-			ci.pc += 2;
-		}
-
-		public static void LoadTrue(CallInfo ci, LuaState luaState, byte A)
-		{
-			luaState.stack[ci.stackBase + A] = new LuaStackBool(true);
-			ci.pc++;
-		}
-
-		public static void LoadNil(CallInfo ci, LuaState luaState, byte A, byte B)
-		{
-			for (int i = A; i < A + B; ++i) {
-				luaState.stack[ci.stackBase + i] = new LuaStackNil();
+			else
+			{
+				throw new UnexpectedConstantType("Unexpected constant type");
 			}
-			ci.pc++;
 		}
 
-		public static void GetUpVal(CallInfo ci, LuaState luaState, byte A, byte B)
+		private static LuaRuntimeProto MapProtoToRuntime(LuaProto proto)
 		{
-			throw new NotImplementedException();
-		}
-
-		public static void SetUpVal(CallInfo ci, LuaState luaState, byte A, byte B)
-		{
-			throw new NotImplementedException();
-		}
-
-		public static void GetTabUp(CallInfo ci, LuaState luaState, byte A, byte B, byte C)
-		{
-			throw new NotImplementedException();
-		}
-
-		public static void GetTable(CallInfo ci, LuaState luaState, byte A, byte B, byte C)
-		{
-			LuaStackTable table = (LuaStackTable) luaState.stack[ci.stackBase + B];
-			luaState.stack[ci.stackBase + A] = table.GetValue(luaState.stack[ci.stackBase + C]);
-			ci.pc += 1;
-		}
-
-		public static void GetI(CallInfo ci, LuaState luaState, byte A, byte B, byte C)
-		{
-			LuaStackTable table = (LuaStackTable)luaState.stack[ci.stackBase + B];
-			luaState.stack[ci.stackBase + A] = table.GetValue(C);
-			ci.pc += 1;
-		}
-
-		public static void GetField(CallInfo ci, LuaState luaState, byte A, byte B, byte C)
-		{
-			//TODO: check if short string
-			LuaStackTable table = (LuaStackTable)luaState.stack[ci.stackBase + B];
-			var constant = (LuaStringConstant) ci.closure.proto.constants[C];
-			luaState.stack[ci.stackBase + A] = table.GetValue(constant.data);
-			ci.pc++;
-		}
-
-		public static void SetTabUp(CallInfo ci, LuaState luaState, byte A, byte B, byte C)
-		{
-			throw new NotImplementedException();
-		}
-
-		public static void SetTable(CallInfo ci, LuaState luaState, byte A, bool k, byte B, byte C)
-		{
-			LuaStackTable table = (LuaStackTable)luaState.stack[ci.stackBase + A];
-			var val = k switch
+			return new LuaRuntimeProto
 			{
-				true => ConstantToValue(ci.closure.proto.constants[C]),
-				false => luaState.stack[ci.stackBase + C]
+				source = proto.source,
+				lineDefined = proto.lineDefined,
+				lastLineDefined = proto.lastLineDefined,
+				numParams = proto.numParams,
+				isVarArg = proto.isVarArg,
+				maxStackSize = proto.maxStackSize,
+				transitions = InstructionToTransitions(
+					proto,
+					proto.code
+				).ToArray(),
+				upValues = proto.upValues,
+				protos = proto.protos
+					.Select(MapProtoToRuntime)
+					.ToArray(),
+				debugInfo = proto.debugInfo
 			};
-			table.SetValue(luaState.stack[ci.stackBase + B], val);
-			ci.pc++;
 		}
 
-		public static void SetI(CallInfo ci, LuaState luaState, byte A, bool k, byte B, byte C)
+
+		private static IEnumerable<IStateTransition> InstructionToTransitions(LuaProto proto, IEnumerable<LuaInstruction> instruction)
 		{
-			LuaStackTable table = (LuaStackTable)luaState.stack[ci.stackBase + A];
-			var val = k switch
+			var enumerator = instruction.GetEnumerator();
+			while (enumerator.MoveNext())
 			{
-				true => ConstantToValue(ci.closure.proto.constants[C]),
-				false => luaState.stack[ci.stackBase + C]
-			};
-			table.SetValue(C, val);
-			ci.pc += 1;
+				var ins = enumerator.Current;
+				yield return ins.DecodeOpCode() switch
+				{
+					InstructionEnum.Move => new TrMove(ins.DecodeA(), ins.DecodeB()),
+					InstructionEnum.LoadI => new TrLoadI(ins.DecodeA(), ins.DecodeSBx()),
+					InstructionEnum.LoadF => new TrLoadF(ins.DecodeA(), ins.DecodeSBx()),
+					InstructionEnum.LoadK => new TrLoadK(
+						ins.DecodeA(),
+						(LuaString) ConstantToValue(proto.constants[ins.DecodeBx()])
+					),
+					InstructionEnum.LoadKX => new TrLoadKx(
+						ins.DecodeA(),
+						ConstantToValue(proto.constants[GetExtraArg(enumerator)])
+					),
+					InstructionEnum.LoadFalse => new TrLoadFalse(ins.DecodeA()),
+					InstructionEnum.LFalseSkip => new TrLFalseSkip(ins.DecodeA()),
+					InstructionEnum.LoadTrue => new TrLoadTrue(ins.DecodeA()),
+					InstructionEnum.LoadNil => new TrLoadNil(ins.DecodeA(), ins.DecodeB()),
+					InstructionEnum.GetUpVal => new TrGetUpVal(ins.DecodeA(), ins.DecodeB()),
+					InstructionEnum.SetUpVal => new TrSetUpVal(ins.DecodeA(), ins.DecodeB()),
+					InstructionEnum.GetTabUp => new TrGetTabUp(ins.DecodeA(), ins.DecodeB(), ins.DecodeC()),
+					InstructionEnum.GetTable => new TrGetTable(ins.DecodeA(), ins.DecodeB(), ins.DecodeC()),
+					InstructionEnum.GetI => new TrGetI(ins.DecodeA(), ins.DecodeB(), ins.DecodeC()),
+					InstructionEnum.GetField => new TrGetField(
+						ins.DecodeA(),
+						ins.DecodeB(),
+						CheckedConstant<LuaString>(proto.constants[GetExtraArg(enumerator)]).value
+					),
+					InstructionEnum.SetTabUp => new TrSetTabUp(ins.DecodeA(), ins.DecodeB(), ins.DecodeC()),
+					InstructionEnum.SetTable => ins.DecodeK() switch
+					{
+						true => new TrSetTableK(
+							ins.DecodeA(),
+							ins.DecodeB(),
+							ConstantToValue(proto.constants[ins.DecodeC()])
+						),
+						false => new TrSetTableC(
+							ins.DecodeA(),
+							ins.DecodeB(),
+							ins.DecodeC()
+						)
+					},
+					InstructionEnum.SetI => ins.DecodeK() switch
+					{
+						true => new TrSetIK(
+							ins.DecodeA(),
+							ins.DecodeB(),
+							ConstantToValue(proto.constants[ins.DecodeC()])
+						),
+						false => new TrSetIR(
+							ins.DecodeA(),
+							ins.DecodeB(),
+							ins.DecodeC()
+						)
+					},
+					InstructionEnum.SetField => ins.DecodeK() switch
+					{
+						true => new TrSetFieldK(
+							ins.DecodeA(),
+							CheckedConstant<LuaString>(proto.constants[ins.DecodeB()]).value,
+							ConstantToValue(proto.constants[ins.DecodeC()])
+						),
+						false => new TrSetFieldR(
+							ins.DecodeA(),
+							CheckedConstant<LuaString>(proto.constants[ins.DecodeB()]).value,
+							ins.DecodeC()
+						)
+					},
+					InstructionEnum.NewTable => new TrNewTable(ins.DecodeA())
+				};
+			}
 		}
 
-		public static void SetField(CallInfo ci, LuaState luaState, byte A, bool k, byte B, byte C)
+		private static uint GetExtraArg(IEnumerator<LuaInstruction> iterator)
 		{
-			LuaStackTable table = (LuaStackTable)luaState.stack[ci.stackBase + A];
-			var val = k switch
+			if (!iterator.MoveNext())
 			{
-				true => ConstantToValue(ci.closure.proto.constants[C]),
-				false => luaState.stack[ci.stackBase + C]
-			};
-			var constant = (LuaStringConstant)ci.closure.proto.constants[B];
-			table.SetValue(constant.data, val);
-		}
-
-		public static void NewTable(CallInfo ci, LuaState luaState, byte A)
-		{
-			//TODO: Implement tables that exploit extra information from
-			//this opcode
-			luaState.stack[ci.stackBase + A] = new LuaStackTable();
-			//we skip the extra arg
-			ci.pc += 2;
-		}
-
-		public static void Self(CallInfo ci, LuaState luaState, byte A, bool k, byte B, byte C)
-		{
-			LuaStackTable table = (LuaStackTable)luaState.stack[ci.stackBase + B];
-
-			luaState.stack[ci.stackBase + A + 1] = table;
-			var val = (LuaStackString) (k switch
+				throw new ExpectedExtraArgException("Expected extra arg after LoadKx");
+			}
+			if (iterator.Current.DecodeOpCode() != InstructionEnum.ExtraArg)
 			{
-				true => ConstantToValue(ci.closure.proto.constants[C]),
-				false => luaState.stack[ci.stackBase + C]
-			});
-			luaState.stack[ci.stackBase + A] = table.GetValue(val.value);
-		}
-
-		public static void AddI(CallInfo ci, LuaState luaState, byte A, byte B, sbyte sC)
-		{
-			IRuntimeValue res = luaState.stack[ci.stackBase + B] switch
-			{
-				LuaStackNumber n => new LuaStackNumber(n.value + sC),
-				LuaStackInteger i => new LuaStackInteger(i.value + sC),
-				_ => throw new InvalidInstructionParam(ci.closure.proto.code[ci.pc], $"Stack value B ({B}) should be a number")
-			};
-			luaState.stack[ci.stackBase + A] = res;
-		}
-
-		public static void AddK(CallInfo ci, LuaState luaState, byte A, byte B, byte C)
-		{
-
+				throw new ExpectedExtraArgException("Expected extra arg after LoadKx");
+			}
+			return iterator.Current.DecodeAx();
 		}
 	}
 }
