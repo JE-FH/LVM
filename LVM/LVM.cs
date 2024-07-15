@@ -12,14 +12,15 @@
 	{
 		public LuaInstruction instruction = _instruction;
 	}
-	internal class CallInfo(LuaStackClosure closure)
+
+	public class CallInfo(LuaStackClosure closure)
 	{
 		public int pc = 0;
 		public LuaStackClosure closure;
 		public int stackBase = 0;
 	}
 
-	internal interface IRuntimeValue
+	public interface IRuntimeValue
 	{
 
 	}
@@ -41,7 +42,7 @@
 		public LuaProto proto = _proto;
 	}
 
-	internal class LuaStackString(byte[] _value) : IRuntimeValue
+	public class LuaStackString(byte[] _value) : IRuntimeValue
 	{
 		public byte[] value = _value;
 	}
@@ -84,7 +85,7 @@
 		}
 	}
 
-	internal class LuaState()
+	public class LuaState()
 	{
 		public List<CallInfo> callStack = [];
 		public List<IRuntimeValue> stack = [];
