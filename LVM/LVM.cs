@@ -106,11 +106,29 @@
 		public required LuaCFunctionDebugInfo debugInfo;
 	}
 
-	public class CallInfo(LuaClosure _closure)
+	public class CallInfo(LuaClosure _closure, List<IRuntimeValue> _stack)
 	{
 		public int pc = 0;
 		public LuaClosure closure = _closure;
 		public int stackBase = 0;
+		public List<IRuntimeValue> stack = _stack;
+		public IRuntimeValue this[int relativeIndex]
+		{
+			get => stack[stackBase + relativeIndex];
+			set => stack[stackBase + relativeIndex] = value;
+		}
+
+		public T GetRegister<T>(int relativeIndex) where T : IRuntimeValue
+		{
+			var val = stack[stackBase + relativeIndex];
+			if (val is T realValue)
+			{
+				return realValue;
+			} else
+			{
+				throw new Exception("some error");
+			}
+		}
 	}
 
 	public class LuaState()
@@ -136,7 +154,7 @@
 			{
 				luaState.stack.Add(new LuaNil());
 			}
-			var callInfo = new CallInfo(closure);
+			var callInfo = new CallInfo(closure, luaState.stack);
 			luaState.callStack.Add(callInfo);
 			while (Step(luaState)) { }
 		}

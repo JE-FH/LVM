@@ -16,7 +16,7 @@ namespace LVM
 	{
 		public void Execute(CallInfo ci, LuaState luaState)
 		{
-			luaState.stack[ci.stackBase + A] = luaState.stack[ci.stackBase + B];
+			ci[A] = ci[B];
 			ci.pc++;
 		}
 	}
@@ -25,7 +25,7 @@ namespace LVM
 	{
 		public void Execute(CallInfo ci, LuaState luaState)
 		{
-			luaState.stack[ci.stackBase + A] = new LuaInteger(sBx);
+			ci[A] = new LuaInteger(sBx);
 			ci.pc++;
 		}
 	}
@@ -34,7 +34,7 @@ namespace LVM
 	{
 		public void Execute(CallInfo ci, LuaState luaState)
 		{
-			luaState.stack[ci.stackBase + A] = new LuaNumber(sBx);
+			ci[A] = new LuaNumber(sBx);
 			ci.pc++;
 		}
 	}
@@ -43,7 +43,7 @@ namespace LVM
 	{
 		public void Execute(CallInfo ci, LuaState luaState)
 		{
-			luaState.stack[ci.stackBase + A] = constant;
+			ci[A] = constant;
 			ci.pc++;
 		}
 	}
@@ -52,7 +52,7 @@ namespace LVM
 	{
 		public void Execute(CallInfo ci, LuaState luaState)
 		{
-			luaState.stack[ci.stackBase + A] = constant;
+			ci[A] = constant;
 			ci.pc += 2;
 		}
 	}
@@ -61,7 +61,7 @@ namespace LVM
 	{
 		public void Execute(CallInfo ci, LuaState luaState)
 		{
-			luaState.stack[ci.stackBase + A] = new LuaBool(false);
+			ci[A] = new LuaBool(false);
 			ci.pc++;
 		}
 	}
@@ -70,7 +70,7 @@ namespace LVM
 	{
 		public void Execute(CallInfo ci, LuaState luaState)
 		{
-			luaState.stack[ci.stackBase + A] = new LuaBool(false);
+			ci[A] = new LuaBool(false);
 			ci.pc += 2;
 		}
 	}
@@ -79,7 +79,7 @@ namespace LVM
 	{
 		public void Execute(CallInfo ci, LuaState luaState)
 		{
-			luaState.stack[ci.stackBase + A] = new LuaBool(true);
+			ci[A] = new LuaBool(true);
 			ci.pc++;
 		}
 	}
@@ -89,7 +89,7 @@ namespace LVM
 		public void Execute(CallInfo ci, LuaState luaState)
 		{
 			for (int i = A; i < A + B; ++i) {
-				luaState.stack[ci.stackBase + i] = new LuaNil();
+				ci[i] = new LuaNil();
 			}
 			ci.pc++;
 		}
@@ -123,8 +123,8 @@ namespace LVM
 	{
 		public void Execute(CallInfo ci, LuaState luaState)
 		{
-			LuaTable table = (LuaTable) luaState.stack[ci.stackBase + B];
-			luaState.stack[ci.stackBase + A] = table.GetValue(luaState.stack[ci.stackBase + C]);
+			LuaTable table = ci.GetRegister<LuaTable>(B);
+			ci[A] = table.GetValue(ci[C]);
 			ci.pc += 1;
 		}
 	}
@@ -133,8 +133,8 @@ namespace LVM
 	{
 		public void Execute(CallInfo ci, LuaState luaState)
 		{
-			LuaTable table = (LuaTable) luaState.stack[ci.stackBase + B];
-			luaState.stack[ci.stackBase + A] = table.GetValue(C);
+			LuaTable table = ci.GetRegister<LuaTable>(B);
+			ci[A] = table.GetValue(C);
 			ci.pc += 1;
 		}
 	}
@@ -143,8 +143,8 @@ namespace LVM
 	public class TrGetField(byte A, byte B, byte[] KC) : IStateTransition {
 		public void Execute(CallInfo ci, LuaState luaState)
 		{
-			LuaTable table = (LuaTable)luaState.stack[ci.stackBase + B];
-			luaState.stack[ci.stackBase + A] = table.GetValue(KC);
+			LuaTable table = ci.GetRegister<LuaTable>(B);
+			ci[A] = table.GetValue(KC);
 			ci.pc++;
 		}
 	}
@@ -161,8 +161,8 @@ namespace LVM
 	{
 		public void Execute(CallInfo ci, LuaState luaState)
 		{
-			LuaTable table = (LuaTable)luaState.stack[ci.stackBase + A];
-			table.SetValue(luaState.stack[ci.stackBase + B], KC);
+			LuaTable table = ci.GetRegister<LuaTable>(A);
+			table.SetValue(ci[B], KC);
 			ci.pc += 1;
 		}
 	}
@@ -171,8 +171,8 @@ namespace LVM
 	{
 		public void Execute(CallInfo ci, LuaState luaState)
 		{
-			LuaTable table = (LuaTable)luaState.stack[ci.stackBase + A];
-			table.SetValue(luaState.stack[ci.stackBase + B], luaState.stack[ci.stackBase + C]);
+			LuaTable table = ci.GetRegister<LuaTable>(A);
+			table.SetValue(ci[B], ci[C]);
 			ci.pc += 1;
 		}
  	}
@@ -181,7 +181,7 @@ namespace LVM
 	{
 		public void Execute(CallInfo ci, LuaState luaState)
 		{
-			LuaTable table = (LuaTable)luaState.stack[ci.stackBase + A];
+			LuaTable table = ci.GetRegister<LuaTable>(A);
 			table.SetValue(B, KC);
 			ci.pc += 1;
 		}
@@ -191,8 +191,8 @@ namespace LVM
 	{
 		public void Execute(CallInfo ci, LuaState luaState)
 		{
-			LuaTable table = (LuaTable)luaState.stack[ci.stackBase + A];
-			table.SetValue(B, luaState.stack[ci.stackBase + C]);
+			LuaTable table = ci.GetRegister<LuaTable>(A);
+			table.SetValue(B, ci[C]);
 			ci.pc += 1;
 		}
 	}
@@ -202,7 +202,7 @@ namespace LVM
 	{
 		public void Execute(CallInfo ci, LuaState luaState)
 		{
-			LuaTable table = (LuaTable)luaState.stack[ci.stackBase + A];
+			LuaTable table = ci.GetRegister<LuaTable>(A);
 			table.SetValue(KB, KC);
 			ci.pc += 1;
 		}
@@ -213,8 +213,8 @@ namespace LVM
 	{
 		public void Execute(CallInfo ci, LuaState luaState)
 		{
-			LuaTable table = (LuaTable)luaState.stack[ci.stackBase + A];
-			table.SetValue(KB, luaState.stack[ci.stackBase = C]);
+			LuaTable table = ci.GetRegister<LuaTable>(A);
+			table.SetValue(KB, ci[C]);
 			ci.pc += 1;
 		}
 	}
@@ -224,9 +224,148 @@ namespace LVM
 	{
 		public void Execute(CallInfo ci, LuaState luaState)
 		{
-			luaState.stack[ci.stackBase + A] = new LuaTable();
+			ci[A] = new LuaTable();
 		}
 	}
+
+	public class TrSelfK(byte A, byte B, byte[] KC) : IStateTransition
+	{
+		public void Execute(CallInfo ci, LuaState luaState)
+		{
+			LuaTable table = ci.GetRegister<LuaTable>(B);
+			ci[A + 1] = table;
+			ci[A] = table.GetValue(KC);
+		}
+	}
+
+	public class TrSelfR(byte A, byte B, byte C) : IStateTransition
+	{
+		public void Execute(CallInfo ci, LuaState luaState)
+		{
+			LuaTable table = ci.GetRegister<LuaTable>(B);
+			LuaString RC = ci.GetRegister<LuaString>(C);
+			ci[A + 1] = table;
+			ci[A] = table.GetValue(RC.value);
+		}
+	}
+
+
+	public class TrAddI(byte A, byte B, sbyte sC) : IStateTransition
+	{
+		public void Execute(CallInfo ci, LuaState luaState)
+		{
+			ci[A] = ci[B] switch
+			{
+				LuaNumber n => new LuaNumber(n.value + sC),
+				LuaInteger i => new LuaInteger(i.value + sC),
+				_ => throw new Exception("Some error")
+			};
+		}
+	}
+
+	public abstract class TrOpKNum(byte A, byte B) : IStateTransition
+	{
+		public void Execute(CallInfo ci, LuaState luaState)
+		{
+			ci[A] = new LuaNumber(Operation(ci.GetRegister<LuaNumber>(A).value));
+		}
+
+		protected abstract double Operation(double a);
+	}
+
+	public class TrAddK(byte A, byte B, double K) : TrOpKNum(A, B)
+	{
+		protected override double Operation(double a)
+		{
+			return a + K;
+		}
+	}
+
+	public class TrSubK(byte A, byte B, double K) : TrOpKNum(A, B)
+	{
+		protected override double Operation(double a)
+		{
+			return a - K;
+		}
+	}
+
+	public class TrMulK(byte A, byte B, double K) : TrOpKNum(A, B)
+	{
+		protected override double Operation(double a)
+		{
+			return a * K;
+		}
+	}
+
+	public class TrModK(byte A, byte B, double K) : TrOpKNum(A, B)
+	{
+		protected override double Operation(double a)
+		{
+			return a % K;
+		}
+	}
+
+	public class TrPowK(byte A, byte B, double K) : TrOpKNum(A, B)
+	{
+		protected override double Operation(double a)
+		{
+			return Math.Pow(a, K);
+		}
+	}
+
+	public class TrDivK(byte A, byte B, double K) : TrOpKNum(A, B)
+	{
+		protected override double Operation(double a)
+		{
+			return a / K;
+		}
+	}
+
+	public class TrIDivK(byte A, byte B, double K) : TrOpKNum(A, B)
+	{
+		protected override double Operation(double a)
+		{
+			return ((int)a) / ((int)K);
+		}
+	}
+
+	public abstract class TrOpKInt(byte A, byte B) : IStateTransition
+	{
+		public void Execute(CallInfo ci, LuaState luaState)
+		{
+			ci[A] = new LuaNumber(Operation(ci[B] switch
+			{
+
+			}));
+		}
+
+		protected abstract double Operation(long a);
+	}
+
+	public class TrAndKInt(byte A, byte B, long K) : TrOpKInt(A, B)
+	{
+		protected override double Operation(long a)
+		{
+			return a & K;
+		}
+	}
+
+	public class TrOrKInt(byte A, byte B, long K) : TrOpKInt(A, B)
+	{
+		protected override double Operation(long a)
+		{
+			return a | K;
+		}
+	}
+
+	public class TrXorKInt(byte A, byte B, long K) : TrOpKInt(A, B)
+	{
+		protected override double Operation(long a)
+		{
+			return a ^ K;
+		}
+	}
+
 
 	public class TrExtraArg() : IStateTransition
 	{

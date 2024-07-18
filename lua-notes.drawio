@@ -1,196 +1,159 @@
-<mxfile host="Electron" modified="2024-07-14T14:26:21.693Z" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/24.6.1 Chrome/124.0.6367.207 Electron/30.0.6 Safari/537.36" etag="cgmGXHyRgpTW_KCHOnGi" version="24.6.1" type="device">
+<mxfile host="Electron" modified="2024-07-16T12:18:30.152Z" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/24.6.1 Chrome/124.0.6367.207 Electron/30.0.6 Safari/537.36" etag="af2DRA98Zejg3qkTJcty" version="24.6.1" type="device">
   <diagram name="Page-1" id="mqpTz-zcbKTS6hanf7nc">
-    <mxGraphModel dx="2045" dy="697" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+    <mxGraphModel dx="1195" dy="697" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
-        <mxCell id="wanFABR7839F9hnohm1--6" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="wanFABR7839F9hnohm1--2" target="wanFABR7839F9hnohm1--4">
+        <mxCell id="wanFABR7839F9hnohm1--6" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="wanFABR7839F9hnohm1--2" target="wanFABR7839F9hnohm1--4" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="wanFABR7839F9hnohm1--2" value="lua_pcallk" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
-          <mxGeometry x="-115" y="57.5" width="120" height="60" as="geometry" />
+        <mxCell id="wanFABR7839F9hnohm1--2" value="lua_pcallk" style="rounded=1;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="125" y="50" width="120" height="60" as="geometry" />
         </mxCell>
-        <mxCell id="wanFABR7839F9hnohm1--8" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="wanFABR7839F9hnohm1--4" target="wanFABR7839F9hnohm1--7">
+        <mxCell id="wanFABR7839F9hnohm1--8" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="wanFABR7839F9hnohm1--4" target="wanFABR7839F9hnohm1--7" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="wanFABR7839F9hnohm1--4" value="&lt;pre style=&quot;font-size: 11pt; line-height: normal; text-align: justify;&quot;&gt;&lt;a style=&quot;text-decoration-line: none; color: rgb(0, 0, 128);&quot; href=&quot;https://www.lua.org/source/5.4/lstate.h.html#CallInfo&quot;&gt;CallInfo&lt;/a&gt; *ci = L-&amp;gt;ci;&lt;/pre&gt;&lt;pre style=&quot;font-size: 11pt; line-height: normal; text-align: justify;&quot;&gt;ci-&amp;gt;... = ...&lt;/pre&gt;" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
-          <mxGeometry x="-165" y="147.5" width="220" height="60" as="geometry" />
+        <mxCell id="wanFABR7839F9hnohm1--4" value="&lt;pre style=&quot;font-size: 11pt; line-height: normal; text-align: justify;&quot;&gt;&lt;a style=&quot;text-decoration-line: none; color: rgb(0, 0, 128);&quot; href=&quot;https://www.lua.org/source/5.4/lstate.h.html#CallInfo&quot;&gt;CallInfo&lt;/a&gt; *ci = L-&amp;gt;ci;&lt;/pre&gt;&lt;pre style=&quot;font-size: 11pt; line-height: normal; text-align: justify;&quot;&gt;ci-&amp;gt;... = ...&lt;/pre&gt;" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="75" y="140" width="220" height="60" as="geometry" />
         </mxCell>
         <UserObject label="&#xa;&lt;pre style=&quot;font-size: 11pt; line-height: normal; color: rgb(0, 0, 0); font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: 400; letter-spacing: normal; orphans: 2; text-align: justify; text-indent: 0px; text-transform: none; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; text-decoration-thickness: initial; text-decoration-style: initial; text-decoration-color: initial;&quot;&gt;&lt;a style=&quot;text-decoration: none; color: rgb(0, 0, 128);&quot; href=&quot;https://www.lua.org/source/5.4/ldo.c.html#luaD_call&quot;&gt;luaD_call&lt;/a&gt;(L, c.func, nresults);&lt;/pre&gt;&#xa;&#xa;" link="&#xa;&lt;pre style=&quot;font-size: 11pt; line-height: normal; color: rgb(0, 0, 0); font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: 400; letter-spacing: normal; orphans: 2; text-align: justify; text-indent: 0px; text-transform: none; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; text-decoration-thickness: initial; text-decoration-style: initial; text-decoration-color: initial;&quot;&gt;&lt;a style=&quot;text-decoration: none; color: rgb(0, 0, 128);&quot; href=&quot;https://www.lua.org/source/5.4/ldo.c.html#luaD_call&quot;&gt;luaD_call&lt;/a&gt;(L, c.func, nresults);&lt;/pre&gt;&#xa;&#xa;" id="wanFABR7839F9hnohm1--7">
-          <mxCell style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
-            <mxGeometry x="-200" y="247.5" width="290" height="60" as="geometry" />
+          <mxCell style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+            <mxGeometry x="40" y="240" width="290" height="60" as="geometry" />
           </mxCell>
         </UserObject>
-        <mxCell id="wanFABR7839F9hnohm1--11" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="wanFABR7839F9hnohm1--9" target="wanFABR7839F9hnohm1--10">
+        <mxCell id="wanFABR7839F9hnohm1--11" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="wanFABR7839F9hnohm1--9" target="wanFABR7839F9hnohm1--10" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="wanFABR7839F9hnohm1--9" value="&lt;a style=&quot;font-size: 11pt; text-align: justify; background-color: initial; text-decoration-line: none; color: rgb(0, 0, 128);&quot; href=&quot;https://www.lua.org/source/5.4/ldo.c.html#luaD_precall&quot;&gt;luaD_precall&lt;/a&gt;&lt;span style=&quot;font-size: 11pt; text-align: justify; background-color: initial;&quot;&gt;(&lt;/span&gt;&lt;a style=&quot;background-color: initial; font-size: 11pt; text-align: justify; text-decoration-line: none; color: rgb(0, 0, 128);&quot; href=&quot;https://www.lua.org/source/5.4/lstate.h.html#lua_State&quot;&gt;lua_State&lt;/a&gt;&lt;span style=&quot;background-color: initial; font-size: 11pt; text-align: justify;&quot;&gt; *L,&amp;nbsp;&lt;/span&gt;&lt;div&gt;&lt;a style=&quot;font-size: 11pt; text-align: justify; background-color: initial; text-decoration-line: none; color: rgb(0, 0, 128);&quot; href=&quot;https://www.lua.org/source/5.4/lobject.h.html#StkId&quot;&gt;StkId&lt;/a&gt;&lt;span style=&quot;font-size: 11pt; text-align: justify; background-color: initial;&quot;&gt; func, int&amp;nbsp;&lt;/span&gt;&lt;span style=&quot;background-color: initial; font-size: 11pt; text-align: justify;&quot;&gt;nresults&lt;/span&gt;&lt;span style=&quot;background-color: initial; font-size: 11pt; text-align: justify;&quot;&gt;)&lt;/span&gt;&lt;/div&gt;" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+        <mxCell id="wanFABR7839F9hnohm1--9" value="&lt;a style=&quot;font-size: 11pt; text-align: justify; background-color: rgba(240, 240, 240, 0.7); margin: -8px; padding: 8px; border-radius: 8px; outline: none; line-height: 2.5em;&quot; name=&quot;luaD_precall&quot;&gt;&lt;span style=&quot;color: rgb(0, 165, 0);&quot; class=&quot;definition&quot;&gt;luaD_precall&lt;/span&gt;&lt;/a&gt;&lt;span style=&quot;font-size: 11pt; text-align: justify; background-color: initial;&quot;&gt;(&lt;/span&gt;&lt;a style=&quot;background-color: initial; font-size: 11pt; text-align: justify; text-decoration-line: none; color: rgb(0, 0, 128);&quot; href=&quot;https://www.lua.org/source/5.4/lstate.h.html#lua_State&quot;&gt;lua_State&lt;/a&gt;&lt;span style=&quot;background-color: initial; font-size: 11pt; text-align: justify;&quot;&gt; *L,&amp;nbsp;&lt;/span&gt;&lt;div&gt;&lt;a style=&quot;font-size: 11pt; text-align: justify; background-color: initial; text-decoration-line: none; color: rgb(0, 0, 128);&quot; href=&quot;https://www.lua.org/source/5.4/lobject.h.html#StkId&quot;&gt;StkId&lt;/a&gt;&lt;span style=&quot;font-size: 11pt; text-align: justify; background-color: initial;&quot;&gt; func, int&amp;nbsp;&lt;/span&gt;&lt;span style=&quot;background-color: initial; font-size: 11pt; text-align: justify;&quot;&gt;nresults&lt;/span&gt;&lt;span style=&quot;background-color: initial; font-size: 11pt; text-align: justify;&quot;&gt;)&lt;/span&gt;&lt;/div&gt;" style="rounded=1;whiteSpace=wrap;html=1;" parent="1" vertex="1">
           <mxGeometry x="460" y="50" width="240" height="60" as="geometry" />
         </mxCell>
-        <mxCell id="wanFABR7839F9hnohm1--12" value="no" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="wanFABR7839F9hnohm1--10" target="wanFABR7839F9hnohm1--13">
+        <mxCell id="wanFABR7839F9hnohm1--12" value="no" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="wanFABR7839F9hnohm1--10" target="wanFABR7839F9hnohm1--13" edge="1">
           <mxGeometry relative="1" as="geometry">
             <mxPoint x="700" y="199.66666666666674" as="targetPoint" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="wanFABR7839F9hnohm1--22" value="yes" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="wanFABR7839F9hnohm1--10" target="wanFABR7839F9hnohm1--21">
+        <mxCell id="wanFABR7839F9hnohm1--22" value="yes" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="wanFABR7839F9hnohm1--10" target="wanFABR7839F9hnohm1--21" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="wanFABR7839F9hnohm1--10" value="is lua function?" style="rhombus;whiteSpace=wrap;html=1;" vertex="1" parent="1">
-          <mxGeometry x="520" y="147.5" width="120" height="60" as="geometry" />
+        <mxCell id="wanFABR7839F9hnohm1--10" value="is lua function?" style="rhombus;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="520" y="160" width="120" height="80" as="geometry" />
         </mxCell>
-        <mxCell id="wanFABR7839F9hnohm1--13" value="...." style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
-          <mxGeometry x="690" y="147.5" width="120" height="60" as="geometry" />
+        <mxCell id="wanFABR7839F9hnohm1--13" value="...." style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="700" y="170" width="120" height="60" as="geometry" />
         </mxCell>
-        <mxCell id="wanFABR7839F9hnohm1--16" value="&lt;pre style=&quot;font-size: 11pt; line-height: normal; text-align: justify;&quot;&gt;L-&amp;gt;ci = ci = &lt;/pre&gt;&lt;pre style=&quot;font-size: 11pt; line-height: normal; text-align: justify;&quot;&gt;  &lt;a style=&quot;text-decoration-line: none; color: rgb(0, 0, 128);&quot; href=&quot;https://www.lua.org/source/5.4/ldo.c.html#prepCallInfo&quot;&gt;prepCallInfo&lt;/a&gt;(&lt;/pre&gt;&lt;pre style=&quot;font-size: 11pt; line-height: normal; text-align: justify;&quot;&gt;    L, func, &lt;/pre&gt;&lt;pre style=&quot;font-size: 11pt; line-height: normal; text-align: justify;&quot;&gt;    nresults, 0, &lt;/pre&gt;&lt;pre style=&quot;font-size: 11pt; line-height: normal; text-align: justify;&quot;&gt;    func + 1 + fsize&lt;/pre&gt;&lt;pre style=&quot;font-size: 11pt; line-height: normal; text-align: justify;&quot;&gt;);&lt;/pre&gt;" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
-          <mxGeometry x="470" y="435" width="220" height="190" as="geometry" />
+        <mxCell id="wanFABR7839F9hnohm1--16" value="&lt;pre style=&quot;font-size: 11pt; line-height: normal; text-align: justify;&quot;&gt;L-&amp;gt;ci = ci = &lt;/pre&gt;&lt;pre style=&quot;font-size: 11pt; line-height: normal; text-align: justify;&quot;&gt;  &lt;a style=&quot;text-decoration-line: none; color: rgb(0, 0, 128);&quot; href=&quot;https://www.lua.org/source/5.4/ldo.c.html#prepCallInfo&quot;&gt;prepCallInfo&lt;/a&gt;(&lt;/pre&gt;&lt;pre style=&quot;font-size: 11pt; line-height: normal; text-align: justify;&quot;&gt;    L, func, &lt;/pre&gt;&lt;pre style=&quot;font-size: 11pt; line-height: normal; text-align: justify;&quot;&gt;    nresults, 0, &lt;/pre&gt;&lt;pre style=&quot;font-size: 11pt; line-height: normal; text-align: justify;&quot;&gt;    func + 1 + fsize&lt;/pre&gt;&lt;pre style=&quot;font-size: 11pt; line-height: normal; text-align: justify;&quot;&gt;);&lt;/pre&gt;" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="470" y="430" width="220" height="190" as="geometry" />
         </mxCell>
-        <mxCell id="wanFABR7839F9hnohm1--24" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="wanFABR7839F9hnohm1--19" target="wanFABR7839F9hnohm1--16">
+        <mxCell id="wanFABR7839F9hnohm1--24" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="wanFABR7839F9hnohm1--19" target="wanFABR7839F9hnohm1--16" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="wanFABR7839F9hnohm1--19" value="&#xa;&lt;pre style=&quot;font-size: 11pt; line-height: normal; color: rgb(0, 0, 0); font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: 400; letter-spacing: normal; orphans: 2; text-align: justify; text-indent: 0px; text-transform: none; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; text-decoration-thickness: initial; text-decoration-style: initial; text-decoration-color: initial;&quot;&gt;int fsize = p-&amp;gt;maxstacksize;&lt;/pre&gt;&#xa;&#xa;" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
-          <mxGeometry x="450" y="340" width="260" height="60" as="geometry" />
+        <mxCell id="wanFABR7839F9hnohm1--19" value="&#xa;&lt;pre style=&quot;font-size: 11pt; line-height: normal; color: rgb(0, 0, 0); font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: 400; letter-spacing: normal; orphans: 2; text-align: justify; text-indent: 0px; text-transform: none; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; text-decoration-thickness: initial; text-decoration-style: initial; text-decoration-color: initial;&quot;&gt;int fsize = p-&amp;gt;maxstacksize;&lt;/pre&gt;&#xa;&#xa;" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="450" y="350" width="260" height="60" as="geometry" />
         </mxCell>
-        <mxCell id="wanFABR7839F9hnohm1--23" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="wanFABR7839F9hnohm1--21" target="wanFABR7839F9hnohm1--19">
+        <mxCell id="wanFABR7839F9hnohm1--23" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="wanFABR7839F9hnohm1--21" target="wanFABR7839F9hnohm1--19" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <UserObject label="&lt;br&gt;&lt;pre style=&quot;font-size: 11pt; line-height: normal; color: rgb(0, 0, 0); font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: 400; letter-spacing: normal; orphans: 2; text-align: justify; text-indent: 0px; text-transform: none; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; text-decoration-thickness: initial; text-decoration-style: initial; text-decoration-color: initial;&quot;&gt;&lt;a style=&quot;text-decoration: none; color: rgb(0, 0, 128);&quot; href=&quot;https://www.lua.org/source/5.4/lobject.h.html#Proto&quot;&gt;Proto&lt;/a&gt; *p =&lt;/pre&gt;&lt;pre style=&quot;font-size: 11pt; line-height: normal; color: rgb(0, 0, 0); font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: 400; letter-spacing: normal; orphans: 2; text-align: justify; text-indent: 0px; text-transform: none; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; text-decoration-thickness: initial; text-decoration-style: initial; text-decoration-color: initial;&quot;&gt;   &lt;a style=&quot;text-decoration: none; color: rgb(0, 0, 128);&quot; href=&quot;https://www.lua.org/source/5.4/lobject.h.html#clLvalue&quot;&gt;clLvalue&lt;/a&gt;(&lt;a style=&quot;text-decoration: none; color: rgb(0, 0, 128);&quot; href=&quot;https://www.lua.org/source/5.4/lobject.h.html#s2v&quot;&gt;s2v&lt;/a&gt;(func))-&amp;gt;p;&lt;/pre&gt;&lt;div&gt;&lt;br/&gt;&lt;/div&gt;" link="&#xa;&lt;pre style=&quot;font-size: 11pt; line-height: normal; color: rgb(0, 0, 0); font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: 400; letter-spacing: normal; orphans: 2; text-align: justify; text-indent: 0px; text-transform: none; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; text-decoration-thickness: initial; text-decoration-style: initial; text-decoration-color: initial;&quot;&gt;&lt;a style=&quot;text-decoration: none; color: rgb(0, 0, 128);&quot; href=&quot;https://www.lua.org/source/5.4/lobject.h.html#Proto&quot;&gt;Proto&lt;/a&gt; *p = &lt;a style=&quot;text-decoration: none; color: rgb(0, 0, 128);&quot; href=&quot;https://www.lua.org/source/5.4/lobject.h.html#clLvalue&quot;&gt;clLvalue&lt;/a&gt;(&lt;a style=&quot;text-decoration: none; color: rgb(0, 0, 128);&quot; href=&quot;https://www.lua.org/source/5.4/lobject.h.html#s2v&quot;&gt;s2v&lt;/a&gt;(func))-&amp;gt;p;&lt;/pre&gt;&#xa;&#xa;" id="wanFABR7839F9hnohm1--21">
-          <mxCell style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
-            <mxGeometry x="460" y="247.5" width="240" height="60" as="geometry" />
+          <mxCell style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+            <mxGeometry x="460" y="270" width="240" height="60" as="geometry" />
           </mxCell>
         </UserObject>
-        <mxCell id="wanFABR7839F9hnohm1--28" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="wanFABR7839F9hnohm1--25" target="wanFABR7839F9hnohm1--27">
+        <mxCell id="wanFABR7839F9hnohm1--28" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="wanFABR7839F9hnohm1--25" target="wanFABR7839F9hnohm1--27" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="wanFABR7839F9hnohm1--25" value="&lt;pre style=&quot;font-size: 11pt; line-height: normal; text-align: justify;&quot;&gt;&lt;a style=&quot;text-decoration-line: none; color: rgb(0, 0, 128);&quot; href=&quot;https://www.lua.org/source/5.4/ldo.c.html#prepCallInfo&quot;&gt;prepCallInfo&lt;/a&gt;&lt;/pre&gt;" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+        <mxCell id="wanFABR7839F9hnohm1--25" value="prepCallInfo" style="rounded=1;whiteSpace=wrap;html=1;" parent="1" vertex="1">
           <mxGeometry x="910" y="50" width="120" height="60" as="geometry" />
         </mxCell>
         <UserObject label="&lt;pre style=&quot;font-size: 11pt; line-height: normal;&quot;&gt;&lt;a href=&quot;https://www.lua.org/source/5.4/lstate.h.html#CallInfo&quot; style=&quot;text-decoration-line: none; color: rgb(0, 0, 128);&quot;&gt;CallInfo&lt;/a&gt; *ci = &lt;br&gt;  L-&amp;gt;ci = &lt;a href=&quot;https://www.lua.org/source/5.4/ldo.c.html#next_ci&quot; style=&quot;text-decoration-line: none; color: rgb(0, 0, 128);&quot;&gt;next_ci&lt;/a&gt;(L);&lt;br&gt;  ci-&amp;gt;func.p = func;&lt;br&gt;  ci-&amp;gt;nresults = nret;&lt;br&gt;  ci-&amp;gt;callstatus = mask;&lt;br&gt;  ci-&amp;gt;top.p = top;&lt;br&gt;  return ci;&lt;/pre&gt;" link="&#xa;&lt;pre style=&quot;font-size: 11pt; line-height: normal; color: rgb(0, 0, 0); font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: 400; letter-spacing: normal; orphans: 2; text-align: justify; text-indent: 0px; text-transform: none; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; text-decoration-thickness: initial; text-decoration-style: initial; text-decoration-color: initial;&quot;&gt;&lt;a style=&quot;text-decoration: none; color: rgb(0, 0, 128);&quot; href=&quot;https://www.lua.org/source/5.4/lstate.h.html#CallInfo&quot;&gt;CallInfo&lt;/a&gt; *ci = L-&amp;gt;ci = &lt;a style=&quot;text-decoration: none; color: rgb(0, 0, 128);&quot; href=&quot;https://www.lua.org/source/5.4/ldo.c.html#next_ci&quot;&gt;next_ci&lt;/a&gt;(L);  /* new frame */&#xa;  ci-&amp;gt;func.p = func;&#xa;  ci-&amp;gt;nresults = nret;&#xa;  ci-&amp;gt;callstatus = mask;&#xa;  ci-&amp;gt;top.p = top;&#xa;  return ci;&lt;/pre&gt;&#xa;&#xa;" id="wanFABR7839F9hnohm1--27">
-          <mxCell style="rounded=0;whiteSpace=wrap;html=1;align=left;" vertex="1" parent="1">
-            <mxGeometry x="860" y="147.5" width="220" height="140" as="geometry" />
+          <mxCell style="rounded=0;whiteSpace=wrap;html=1;align=left;" parent="1" vertex="1">
+            <mxGeometry x="860" y="160" width="220" height="140" as="geometry" />
           </mxCell>
         </UserObject>
-        <mxCell id="wanFABR7839F9hnohm1--33" value="Next" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.25;exitY=1;exitDx=0;exitDy=0;entryX=0.25;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="wanFABR7839F9hnohm1--31" target="wanFABR7839F9hnohm1--32">
+        <mxCell id="wanFABR7839F9hnohm1--33" value="Next" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.25;exitY=1;exitDx=0;exitDy=0;entryX=0.25;entryY=0;entryDx=0;entryDy=0;" parent="1" source="wanFABR7839F9hnohm1--31" target="wanFABR7839F9hnohm1--32" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="wanFABR7839F9hnohm1--31" value="callInfo" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+        <mxCell id="wanFABR7839F9hnohm1--31" value="callInfo" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
           <mxGeometry x="1150" y="360" width="120" height="30" as="geometry" />
         </mxCell>
-        <mxCell id="wanFABR7839F9hnohm1--35" value="Previous" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.75;exitY=0;exitDx=0;exitDy=0;entryX=0.75;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="wanFABR7839F9hnohm1--32" target="wanFABR7839F9hnohm1--31">
+        <mxCell id="wanFABR7839F9hnohm1--35" value="Previous" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.75;exitY=0;exitDx=0;exitDy=0;entryX=0.75;entryY=1;entryDx=0;entryDy=0;" parent="1" source="wanFABR7839F9hnohm1--32" target="wanFABR7839F9hnohm1--31" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="wanFABR7839F9hnohm1--37" value="Next" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.25;exitY=1;exitDx=0;exitDy=0;entryX=0.25;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="wanFABR7839F9hnohm1--32" target="wanFABR7839F9hnohm1--36">
+        <mxCell id="wanFABR7839F9hnohm1--37" value="Next" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.25;exitY=1;exitDx=0;exitDy=0;entryX=0.25;entryY=0;entryDx=0;entryDy=0;" parent="1" source="wanFABR7839F9hnohm1--32" target="wanFABR7839F9hnohm1--36" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="wanFABR7839F9hnohm1--32" value="callInfo" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+        <mxCell id="wanFABR7839F9hnohm1--32" value="callInfo" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
           <mxGeometry x="1150" y="435" width="120" height="30" as="geometry" />
         </mxCell>
-        <mxCell id="wanFABR7839F9hnohm1--38" value="Previous" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.75;exitY=0;exitDx=0;exitDy=0;entryX=0.75;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="wanFABR7839F9hnohm1--36" target="wanFABR7839F9hnohm1--32">
+        <mxCell id="wanFABR7839F9hnohm1--38" value="Previous" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.75;exitY=0;exitDx=0;exitDy=0;entryX=0.75;entryY=1;entryDx=0;entryDy=0;" parent="1" source="wanFABR7839F9hnohm1--36" target="wanFABR7839F9hnohm1--32" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="wanFABR7839F9hnohm1--39" value="Next" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.25;exitY=1;exitDx=0;exitDy=0;" edge="1" parent="1" source="wanFABR7839F9hnohm1--36">
+        <mxCell id="wanFABR7839F9hnohm1--39" value="Next" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.25;exitY=1;exitDx=0;exitDy=0;" parent="1" source="wanFABR7839F9hnohm1--36" edge="1">
           <mxGeometry relative="1" as="geometry">
             <mxPoint x="1180" y="590" as="targetPoint" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="wanFABR7839F9hnohm1--36" value="callInfo" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+        <mxCell id="wanFABR7839F9hnohm1--36" value="callInfo" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
           <mxGeometry x="1150" y="510" width="120" height="30" as="geometry" />
         </mxCell>
-        <mxCell id="wanFABR7839F9hnohm1--42" value="Lua state" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=30;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+        <mxCell id="wanFABR7839F9hnohm1--42" value="Lua state" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=30;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
           <mxGeometry x="1430" y="390" width="140" height="150" as="geometry" />
         </mxCell>
-        <mxCell id="wanFABR7839F9hnohm1--44" value="base_ci" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" vertex="1" parent="wanFABR7839F9hnohm1--42">
+        <mxCell id="wanFABR7839F9hnohm1--44" value="base_ci" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" parent="wanFABR7839F9hnohm1--42" vertex="1">
           <mxGeometry y="30" width="140" height="30" as="geometry" />
         </mxCell>
-        <mxCell id="wanFABR7839F9hnohm1--43" value="ci" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" vertex="1" parent="wanFABR7839F9hnohm1--42">
+        <mxCell id="wanFABR7839F9hnohm1--43" value="ci" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" parent="wanFABR7839F9hnohm1--42" vertex="1">
           <mxGeometry y="60" width="140" height="30" as="geometry" />
         </mxCell>
-        <mxCell id="wanFABR7839F9hnohm1--45" value="stack" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" vertex="1" parent="wanFABR7839F9hnohm1--42">
+        <mxCell id="wanFABR7839F9hnohm1--45" value="stack" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" parent="wanFABR7839F9hnohm1--42" vertex="1">
           <mxGeometry y="90" width="140" height="30" as="geometry" />
         </mxCell>
-        <mxCell id="wanFABR7839F9hnohm1--61" value="stack_last" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" vertex="1" parent="wanFABR7839F9hnohm1--42">
+        <mxCell id="wanFABR7839F9hnohm1--61" value="stack_last" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" parent="wanFABR7839F9hnohm1--42" vertex="1">
           <mxGeometry y="120" width="140" height="30" as="geometry" />
         </mxCell>
-        <mxCell id="wanFABR7839F9hnohm1--46" style="rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="wanFABR7839F9hnohm1--43" target="wanFABR7839F9hnohm1--36">
+        <mxCell id="wanFABR7839F9hnohm1--46" style="rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="wanFABR7839F9hnohm1--43" target="wanFABR7839F9hnohm1--36" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="wanFABR7839F9hnohm1--47" style="rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="wanFABR7839F9hnohm1--44" target="wanFABR7839F9hnohm1--31">
+        <mxCell id="wanFABR7839F9hnohm1--47" style="rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="wanFABR7839F9hnohm1--44" target="wanFABR7839F9hnohm1--31" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="wanFABR7839F9hnohm1--49" value="StackValues" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=30;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+        <mxCell id="wanFABR7839F9hnohm1--49" value="StackValues" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=30;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
           <mxGeometry x="1710" y="360" width="140" height="240" as="geometry" />
         </mxCell>
-        <mxCell id="wanFABR7839F9hnohm1--50" value="StackValue" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" vertex="1" parent="wanFABR7839F9hnohm1--49">
+        <mxCell id="wanFABR7839F9hnohm1--50" value="StackValue" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" parent="wanFABR7839F9hnohm1--49" vertex="1">
           <mxGeometry y="30" width="140" height="30" as="geometry" />
         </mxCell>
-        <mxCell id="wanFABR7839F9hnohm1--51" value="StackValue" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" vertex="1" parent="wanFABR7839F9hnohm1--49">
+        <mxCell id="wanFABR7839F9hnohm1--51" value="StackValue" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" parent="wanFABR7839F9hnohm1--49" vertex="1">
           <mxGeometry y="60" width="140" height="30" as="geometry" />
         </mxCell>
-        <mxCell id="wanFABR7839F9hnohm1--52" value="StackValue" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" vertex="1" parent="wanFABR7839F9hnohm1--49">
+        <mxCell id="wanFABR7839F9hnohm1--52" value="StackValue" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" parent="wanFABR7839F9hnohm1--49" vertex="1">
           <mxGeometry y="90" width="140" height="30" as="geometry" />
         </mxCell>
-        <mxCell id="wanFABR7839F9hnohm1--53" value="StackValue" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" vertex="1" parent="wanFABR7839F9hnohm1--49">
+        <mxCell id="wanFABR7839F9hnohm1--53" value="StackValue" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" parent="wanFABR7839F9hnohm1--49" vertex="1">
           <mxGeometry y="120" width="140" height="30" as="geometry" />
         </mxCell>
-        <mxCell id="wanFABR7839F9hnohm1--59" value="StackValue" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" vertex="1" parent="wanFABR7839F9hnohm1--49">
+        <mxCell id="wanFABR7839F9hnohm1--59" value="StackValue" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" parent="wanFABR7839F9hnohm1--49" vertex="1">
           <mxGeometry y="150" width="140" height="30" as="geometry" />
         </mxCell>
-        <mxCell id="wanFABR7839F9hnohm1--62" value="StackValue" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" vertex="1" parent="wanFABR7839F9hnohm1--49">
+        <mxCell id="wanFABR7839F9hnohm1--62" value="StackValue" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" parent="wanFABR7839F9hnohm1--49" vertex="1">
           <mxGeometry y="180" width="140" height="30" as="geometry" />
         </mxCell>
-        <mxCell id="wanFABR7839F9hnohm1--63" value="StackValue" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" vertex="1" parent="wanFABR7839F9hnohm1--49">
+        <mxCell id="wanFABR7839F9hnohm1--63" value="StackValue" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" parent="wanFABR7839F9hnohm1--49" vertex="1">
           <mxGeometry y="210" width="140" height="30" as="geometry" />
         </mxCell>
-        <mxCell id="wanFABR7839F9hnohm1--60" value="??? maybe" style="rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;dashed=1;" edge="1" parent="1" source="wanFABR7839F9hnohm1--45" target="wanFABR7839F9hnohm1--50">
+        <mxCell id="wanFABR7839F9hnohm1--60" value="??? maybe" style="rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;dashed=1;" parent="1" source="wanFABR7839F9hnohm1--45" target="wanFABR7839F9hnohm1--50" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="wanFABR7839F9hnohm1--65" value="End" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;dashed=1;" vertex="1" parent="1">
+        <mxCell id="wanFABR7839F9hnohm1--65" value="End" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;dashed=1;" parent="1" vertex="1">
           <mxGeometry x="1710" y="600" width="140" height="30" as="geometry" />
         </mxCell>
-        <mxCell id="wanFABR7839F9hnohm1--66" style="rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;dashed=1;" edge="1" parent="1" source="wanFABR7839F9hnohm1--61" target="wanFABR7839F9hnohm1--65">
+        <mxCell id="wanFABR7839F9hnohm1--66" style="rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;dashed=1;" parent="1" source="wanFABR7839F9hnohm1--61" target="wanFABR7839F9hnohm1--65" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="wanFABR7839F9hnohm1--67" value="??? maybe" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="wanFABR7839F9hnohm1--66">
+        <mxCell id="wanFABR7839F9hnohm1--67" value="??? maybe" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" parent="wanFABR7839F9hnohm1--66" vertex="1" connectable="0">
           <mxGeometry x="-0.1467" y="-2" relative="1" as="geometry">
             <mxPoint as="offset" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="wanFABR7839F9hnohm1--68" value="next_ci creates or gets the next available callinfo object in the lua state" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
-          <mxGeometry x="1160" y="155" width="170" height="55" as="geometry" />
-        </mxCell>
-        <mxCell id="wanFABR7839F9hnohm1--71" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="wanFABR7839F9hnohm1--69" target="wanFABR7839F9hnohm1--70">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-        <UserObject label="&lt;pre style=&quot;forced-color-adjust: none; color: rgb(0, 0, 0); font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: 400; letter-spacing: normal; orphans: 2; text-indent: 0px; text-transform: none; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; background-color: rgb(251, 251, 251); text-decoration-thickness: initial; text-decoration-style: initial; text-decoration-color: initial; font-size: 11pt; line-height: normal; text-align: justify;&quot;&gt;&lt;a style=&quot;forced-color-adjust: none; text-decoration: none; color: rgb(0, 0, 128);&quot; href=&quot;https://www.lua.org/source/5.4/ldo.c.html#luaD_call&quot;&gt;luaD_call&lt;/a&gt;&lt;/pre&gt;" link="&#xa;&lt;pre style=&quot;forced-color-adjust: none; color: rgb(0, 0, 0); font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: 400; letter-spacing: normal; orphans: 2; text-indent: 0px; text-transform: none; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; background-color: rgb(251, 251, 251); text-decoration-thickness: initial; text-decoration-style: initial; text-decoration-color: initial; font-size: 11pt; line-height: normal; text-align: justify;&quot;&gt;&lt;a style=&quot;forced-color-adjust: none; text-decoration: none; color: rgb(0, 0, 128);&quot; href=&quot;https://www.lua.org/source/5.4/ldo.c.html#luaD_call&quot;&gt;luaD_call&lt;/a&gt;&lt;/pre&gt;&#xa;&#xa;" id="wanFABR7839F9hnohm1--69">
-          <mxCell style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
-            <mxGeometry x="110" y="52.5" width="120" height="60" as="geometry" />
-          </mxCell>
-        </UserObject>
-        <UserObject label="&lt;br&gt;&lt;pre style=&quot;font-size: 11pt; line-height: normal; color: rgb(0, 0, 0); font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: 400; letter-spacing: normal; orphans: 2; text-align: justify; text-indent: 0px; text-transform: none; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; text-decoration-thickness: initial; text-decoration-style: initial; text-decoration-color: initial;&quot;&gt;&lt;a style=&quot;text-decoration: none; color: rgb(0, 0, 128);&quot; href=&quot;https://www.lua.org/source/5.4/ldo.c.html#ccall&quot;&gt;ccall&lt;/a&gt;&lt;/pre&gt;&lt;div&gt;&lt;br/&gt;&lt;/div&gt;" link="&#xa;&lt;pre style=&quot;font-size: 11pt; line-height: normal; color: rgb(0, 0, 0); font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: 400; letter-spacing: normal; orphans: 2; text-align: justify; text-indent: 0px; text-transform: none; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; text-decoration-thickness: initial; text-decoration-style: initial; text-decoration-color: initial;&quot;&gt; &lt;a style=&quot;text-decoration: none; color: rgb(0, 0, 128);&quot; href=&quot;https://www.lua.org/source/5.4/ldo.c.html#ccall&quot;&gt;ccall&lt;/a&gt;&lt;/pre&gt;&#xa;&#xa;" id="wanFABR7839F9hnohm1--70">
-          <mxCell style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
-            <mxGeometry x="110" y="147.5" width="120" height="60" as="geometry" />
-          </mxCell>
-        </UserObject>
-        <mxCell id="wanFABR7839F9hnohm1--74" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="wanFABR7839F9hnohm1--72" target="wanFABR7839F9hnohm1--73">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-        <UserObject label="&#xa;&lt;pre style=&quot;forced-color-adjust: none; font-size: 11pt; line-height: normal; color: rgb(0, 0, 0); font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: 400; letter-spacing: normal; orphans: 2; text-align: justify; text-indent: 0px; text-transform: none; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; text-decoration-thickness: initial; text-decoration-style: initial; text-decoration-color: initial;&quot;&gt;&lt;a style=&quot;forced-color-adjust: none; text-decoration: none; color: rgb(0, 0, 128);&quot; href=&quot;https://www.lua.org/source/5.4/ldo.c.html#ccall&quot;&gt;&lt;br class=&quot;Apple-interchange-newline&quot;&gt;ccall&lt;/a&gt;&lt;/pre&gt;&lt;div style=&quot;forced-color-adjust: none;&quot;&gt;&lt;br style=&quot;forced-color-adjust: none; color: rgb(0, 0, 0); font-family: Helvetica; font-size: 12px; font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: 400; letter-spacing: normal; orphans: 2; text-align: center; text-indent: 0px; text-transform: none; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; white-space: normal; background-color: rgb(251, 251, 251); text-decoration-thickness: initial; text-decoration-style: initial; text-decoration-color: initial;&quot;&gt;&#xa;&#xa;&lt;/div&gt;" link="&#xa;&lt;pre style=&quot;forced-color-adjust: none; font-size: 11pt; line-height: normal; color: rgb(0, 0, 0); font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: 400; letter-spacing: normal; orphans: 2; text-align: justify; text-indent: 0px; text-transform: none; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; text-decoration-thickness: initial; text-decoration-style: initial; text-decoration-color: initial;&quot;&gt;&lt;a style=&quot;forced-color-adjust: none; text-decoration: none; color: rgb(0, 0, 128);&quot; href=&quot;https://www.lua.org/source/5.4/ldo.c.html#ccall&quot;&gt;&lt;br class=&quot;Apple-interchange-newline&quot;&gt;ccall&lt;/a&gt;&lt;/pre&gt;&lt;div style=&quot;forced-color-adjust: none;&quot;&gt;&lt;br style=&quot;forced-color-adjust: none; color: rgb(0, 0, 0); font-family: Helvetica; font-size: 12px; font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: 400; letter-spacing: normal; orphans: 2; text-align: center; text-indent: 0px; text-transform: none; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; white-space: normal; background-color: rgb(251, 251, 251); text-decoration-thickness: initial; text-decoration-style: initial; text-decoration-color: initial;&quot;&gt;&#xa;&#xa;&lt;/div&gt;" id="wanFABR7839F9hnohm1--72">
-          <mxCell style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
-            <mxGeometry x="270" y="52.5" width="120" height="60" as="geometry" />
-          </mxCell>
-        </UserObject>
-        <mxCell id="wanFABR7839F9hnohm1--76" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="wanFABR7839F9hnohm1--73" target="wanFABR7839F9hnohm1--75">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-        <UserObject label="&lt;pre style=&quot;font-size: 11pt; line-height: normal; color: rgb(0, 0, 0); font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: 400; letter-spacing: normal; orphans: 2; text-align: justify; text-indent: 0px; text-transform: none; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; text-decoration-thickness: initial; text-decoration-style: initial; text-decoration-color: initial;&quot;&gt;&lt;a style=&quot;text-decoration: none; color: rgb(0, 0, 128);&quot; href=&quot;https://www.lua.org/source/5.4/ldo.c.html#luaD_precall&quot;&gt;luaD_precall&lt;/a&gt;&lt;/pre&gt;" link="&#xa;&lt;pre style=&quot;font-size: 11pt; line-height: normal; color: rgb(0, 0, 0); font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: 400; letter-spacing: normal; orphans: 2; text-align: justify; text-indent: 0px; text-transform: none; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; text-decoration-thickness: initial; text-decoration-style: initial; text-decoration-color: initial;&quot;&gt;&lt;a style=&quot;text-decoration: none; color: rgb(0, 0, 128);&quot; href=&quot;https://www.lua.org/source/5.4/ldo.c.html#luaD_precall&quot;&gt;luaD_precall&lt;/a&gt;&lt;/pre&gt;&#xa;&#xa;" id="wanFABR7839F9hnohm1--73">
-          <mxCell style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
-            <mxGeometry x="270" y="147.5" width="120" height="60" as="geometry" />
-          </mxCell>
-        </UserObject>
-        <UserObject label="&lt;pre style=&quot;font-size: 11pt; line-height: normal; text-align: justify;&quot;&gt;&lt;a style=&quot;text-decoration-line: none; color: rgb(0, 0, 128);&quot; href=&quot;https://www.lua.org/source/5.4/lvm.c.html#luaV_execute&quot;&gt;luaV_execute&lt;/a&gt;&lt;/pre&gt;" link="&#xa;&lt;pre style=&quot;font-size: 11pt; line-height: normal; color: rgb(0, 0, 0); font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: 400; letter-spacing: normal; orphans: 2; text-align: justify; text-indent: 0px; text-transform: none; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; text-decoration-thickness: initial; text-decoration-style: initial; text-decoration-color: initial;&quot;&gt;&lt;a style=&quot;text-decoration: none; color: rgb(0, 0, 128); background-color: rgb(208, 208, 255); border-radius: 4px;&quot; href=&quot;https://www.lua.org/source/5.4/lvm.c.html#luaV_execute&quot;&gt;luaV_execute&lt;/a&gt;&lt;/pre&gt;&#xa;&#xa;" id="wanFABR7839F9hnohm1--75">
-          <mxCell style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
-            <mxGeometry x="270" y="247.5" width="120" height="60" as="geometry" />
-          </mxCell>
-        </UserObject>
       </root>
     </mxGraphModel>
   </diagram>
