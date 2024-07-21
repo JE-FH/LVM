@@ -720,6 +720,19 @@ namespace LVM
 		}
 	}
 
+	public class TrCall(byte A, byte B, byte C) : IStateTransition
+	{
+		public void Execute(CallInfo ci, LuaState luaState)
+		{
+			var closure = ci.GetRegister<LuaClosure>(A);
+			var topCi = new CallInfo(luaState, closure)
+			{
+				stackBase = ci.stackBase + A + 1
+			};
+			luaState.callStack.Add(topCi);
+		}
+	}
+
 	public class TrExtraArg() : IStateTransition
 	{
 		public void Execute(CallInfo ci, LuaState luaState)
