@@ -1,10 +1,27 @@
 ﻿using System.Reflection.Metadata;
+using System.Security.Cryptography;
+using System.Text;
+using LVM.RuntimeType;
 
 namespace LVM
 {
-	public class ExtraArgInstructionReachedException(int _pc) : Exception("Extra arg instruction was reached")
+    public class ExtraArgInstructionReachedException(int _pc) : Exception("Extra arg instruction was reached")
 	{
 		public int pc = _pc;
+	}
+
+	public class WrongRegisterTypeException(int _registerIndex, IRuntimeValue _registerValue) : Exception
+	{
+		public int registerIndex = _registerIndex;
+		public IRuntimeValue registerValue = _registerValue;
+	}
+
+	public class UndefinedBinaryOperationException(int _registerIndexA, int _registerIndexB, IRuntimeValue _valueA, IRuntimeValue _valueB) : Exception
+	{
+		public int registerIndexA = _registerIndexA;
+		public int registerIndexB = _registerIndexB;
+		public IRuntimeValue valueA = _valueA;
+		public IRuntimeValue valueB = _valueB;
 	}
 
 	public interface IStateTransition
@@ -99,7 +116,7 @@ namespace LVM
 	{
 		public void Execute(CallInfo ci, LuaState luaState)
 		{
-			throw new NotImplementedException();
+			ci[A] = ci.closure.upValues[B].value;
 		}
 	}
 
@@ -107,18 +124,28 @@ namespace LVM
 	{
 		public void Execute(CallInfo ci, LuaState luaState)
 		{
-			throw new NotImplementedException();
+			ci.closure.upValues[A].value = ci[B];
 		}
 	}
 
-	public class TrGetTabUp(byte A, byte B, byte C) : IStateTransition
+	//TODO: Call metamethod
+	public class TrGetTabUp(byte A, byte B, byte[] KC) : IStateTransition
 	{
 		public void Execute(CallInfo ci, LuaState luaState)
 		{
-			throw new NotImplementedException();
+			if (ci.closure.upValues[B].value is LuaTable realValue)
+			{
+				ci[A] = realValue.GetValue(KC);
+				ci.pc += 1;
+			}
+			else
+			{
+				throw new Exception("some exception");
+			}
 		}
 	}
 
+	//TODO: Call metamethod
 	public class TrGetTable(byte A, byte B, byte C) : IStateTransition
 	{
 		public void Execute(CallInfo ci, LuaState luaState)
@@ -129,6 +156,7 @@ namespace LVM
 		}
 	}
 
+	//TODO: Call metamethod
 	public class TrGetI(byte A, byte B, byte C) : IStateTransition
 	{
 		public void Execute(CallInfo ci, LuaState luaState)
@@ -140,6 +168,7 @@ namespace LVM
 	}
 
 	//The constant can only be a short string to conform with the native lua VM
+	//TODO: Call metamethod
 	public class TrGetField(byte A, byte B, byte[] KC) : IStateTransition {
 		public void Execute(CallInfo ci, LuaState luaState)
 		{
@@ -149,14 +178,41 @@ namespace LVM
 		}
 	}
 
-	public class TrSetTabUp(byte A, byte B, byte C) : IStateTransition
+	//TODO: Call metamethod
+	public class TrSetTabUpK(byte A, byte[] KB, IRuntimeValue C) : IStateTransition
 	{
 		public void Execute(CallInfo ci, LuaState luaState)
 		{
-			throw new NotImplementedException();
+			if (ci.closure.upValues[A].value is LuaTable realValue)
+			{
+				realValue.SetValue(KB, C);
+				ci.pc += 1;
+			}
+			else
+			{
+				throw new Exception("some exception");
+			}
 		}
 	}
 
+	//TODO: Call metamethod
+	public class TrSetTabUpR(byte A, byte[] KB, byte C) : IStateTransition
+	{
+		public void Execute(CallInfo ci, LuaState luaState)
+		{
+			if (ci.closure.upValues[A].value is LuaTable realValue)
+			{
+				realValue.SetValue(KB, ci[C]);
+				ci.pc += 1;
+			}
+			else
+			{
+				throw new Exception("some exception");
+			}
+		}
+	}
+
+	//TODO: Call metamethod
 	public class TrSetTableK(byte A, byte B, IRuntimeValue KC) : IStateTransition
 	{
 		public void Execute(CallInfo ci, LuaState luaState)
@@ -167,6 +223,7 @@ namespace LVM
 		}
 	}
 
+	//TODO: Call metamethod
 	public class TrSetTableC(byte A, byte B, byte C) : IStateTransition
 	{
 		public void Execute(CallInfo ci, LuaState luaState)
@@ -175,8 +232,9 @@ namespace LVM
 			table.SetValue(ci[B], ci[C]);
 			ci.pc += 1;
 		}
- 	}
+	}
 
+	//TODO: Call metamethod
 	public class TrSetIK(byte A, byte B, IRuntimeValue KC) : IStateTransition
 	{
 		public void Execute(CallInfo ci, LuaState luaState)
@@ -187,6 +245,7 @@ namespace LVM
 		}
 	}
 
+	//TODO: Call metamethod
 	public class TrSetIR(byte A, byte B, byte C) : IStateTransition
 	{
 		public void Execute(CallInfo ci, LuaState luaState)
@@ -198,6 +257,7 @@ namespace LVM
 	}
 
 	//The constant can only be a short string to conform with the native lua VM
+	//TODO: Call metamethod
 	public class TrSetFieldK(byte A, byte[] KB, IRuntimeValue KC) : IStateTransition
 	{
 		public void Execute(CallInfo ci, LuaState luaState)
@@ -209,6 +269,7 @@ namespace LVM
 	}
 
 	//The constant can only be a short string to conform with the native lua VM
+	//TODO: Call metamethod
 	public class TrSetFieldR(byte A, byte[] KB, byte C) : IStateTransition
 	{
 		public void Execute(CallInfo ci, LuaState luaState)
@@ -225,6 +286,7 @@ namespace LVM
 		public void Execute(CallInfo ci, LuaState luaState)
 		{
 			ci[A] = new LuaTable();
+			ci.pc += 2;
 		}
 	}
 
@@ -235,6 +297,7 @@ namespace LVM
 			LuaTable table = ci.GetRegister<LuaTable>(B);
 			ci[A + 1] = table;
 			ci[A] = table.GetValue(KC);
+			ci.pc += 1;
 		}
 	}
 
@@ -246,20 +309,26 @@ namespace LVM
 			LuaString RC = ci.GetRegister<LuaString>(C);
 			ci[A + 1] = table;
 			ci[A] = table.GetValue(RC.value);
+			ci.pc += 1;
 		}
 	}
-
 
 	public class TrAddI(byte A, byte B, sbyte sC) : IStateTransition
 	{
 		public void Execute(CallInfo ci, LuaState luaState)
 		{
-			ci[A] = ci[B] switch
+			IRuntimeValue? val = ci[B] switch
 			{
 				LuaNumber n => new LuaNumber(n.value + sC),
 				LuaInteger i => new LuaInteger(i.value + sC),
-				_ => throw new Exception("Some error")
+				_ => null
 			};
+			if (val != null)
+			{
+				ci[A] = val;
+				ci.pc += 1;
+			}
+			ci.pc += 1;
 		}
 	}
 
@@ -267,7 +336,13 @@ namespace LVM
 	{
 		public void Execute(CallInfo ci, LuaState luaState)
 		{
-			ci[A] = new LuaNumber(Operation(ci.GetRegister<LuaNumber>(A).value));
+			double? val = ci.CoerceToNumber(A);
+			if (val != null)
+			{
+				ci[A] = new LuaNumber(Operation(val.Value));
+				ci.pc += 1;
+			}
+			ci.pc += 1;
 		}
 
 		protected abstract double Operation(double a);
@@ -275,97 +350,375 @@ namespace LVM
 
 	public class TrAddK(byte A, byte B, double K) : TrOpKNum(A, B)
 	{
-		protected override double Operation(double a)
-		{
-			return a + K;
-		}
+		protected override double Operation(double a) => a + K;
 	}
 
 	public class TrSubK(byte A, byte B, double K) : TrOpKNum(A, B)
 	{
-		protected override double Operation(double a)
-		{
-			return a - K;
-		}
+		protected override double Operation(double a) => a - K;
 	}
 
 	public class TrMulK(byte A, byte B, double K) : TrOpKNum(A, B)
 	{
-		protected override double Operation(double a)
-		{
-			return a * K;
-		}
+		protected override double Operation(double a) => a * K;
 	}
 
 	public class TrModK(byte A, byte B, double K) : TrOpKNum(A, B)
 	{
-		protected override double Operation(double a)
-		{
-			return a % K;
-		}
+		protected override double Operation(double a) => a % K;
 	}
 
 	public class TrPowK(byte A, byte B, double K) : TrOpKNum(A, B)
 	{
-		protected override double Operation(double a)
-		{
-			return Math.Pow(a, K);
-		}
+		protected override double Operation(double a) => Math.Pow(a, K);
 	}
 
 	public class TrDivK(byte A, byte B, double K) : TrOpKNum(A, B)
 	{
-		protected override double Operation(double a)
-		{
-			return a / K;
-		}
+		protected override double Operation(double a) => a / K;
 	}
 
 	public class TrIDivK(byte A, byte B, double K) : TrOpKNum(A, B)
 	{
-		protected override double Operation(double a)
-		{
-			return ((int)a) / ((int)K);
-		}
+		protected override double Operation(double a) => ((int)a) / ((int)K);
 	}
 
 	public abstract class TrOpKInt(byte A, byte B) : IStateTransition
 	{
 		public void Execute(CallInfo ci, LuaState luaState)
 		{
-			ci[A] = new LuaNumber(Operation(ci[B] switch
+			long? val = ci.CoerceToInteger(B);
+			if (val != null)
 			{
-
-			}));
+				ci[A] = new LuaNumber(Operation(val.Value));
+				ci.pc += 1;
+			}
+			ci.pc += 1;
 		}
 
 		protected abstract double Operation(long a);
 	}
 
-	public class TrAndKInt(byte A, byte B, long K) : TrOpKInt(A, B)
+	public class TrBAndK(byte A, byte B, long K) : TrOpKInt(A, B)
 	{
-		protected override double Operation(long a)
+		protected override double Operation(long a) => a & K;
+	}
+
+	public class TrBOrK(byte A, byte B, long K) : TrOpKInt(A, B)
+	{
+		protected override double Operation(long a) => a | K;
+	}
+
+	public class TrBXorK(byte A, byte B, long K) : TrOpKInt(A, B)
+	{
+		protected override double Operation(long a) => a ^ K;
+	}
+
+	public class TrShrI(byte A, byte B, sbyte sC) : IStateTransition
+	{
+		public void Execute(CallInfo ci, LuaState luaState)
 		{
-			return a & K;
+			long? val = ci.CoerceToInteger(B);
+			if (val != null)
+			{
+				ci[A] = new LuaInteger(val.Value >> sC);
+				ci.pc += 1;
+			}
+			ci.pc += 1;
 		}
 	}
 
-	public class TrOrKInt(byte A, byte B, long K) : TrOpKInt(A, B)
+	public class TrShlI(byte A, byte B, sbyte sC) : IStateTransition
 	{
-		protected override double Operation(long a)
+		public void Execute(CallInfo ci, LuaState luaState)
 		{
-			return a | K;
+			long? val = ci.CoerceToInteger(B);
+			if (val != null)
+			{
+				ci[A] = new LuaInteger(sC << (int)Math.Max(Math.Min(val.Value, 10), -10));
+				ci.pc += 1;
+			}
+			ci.pc += 1;
 		}
 	}
 
-	public class TrXorKInt(byte A, byte B, long K) : TrOpKInt(A, B)
+	public abstract class TrBinaryRealOperation(byte A, byte B, byte C) : IStateTransition
 	{
-		protected override double Operation(long a)
+		public void Execute(CallInfo ci, LuaState luaState)
 		{
-			return a ^ K;
+			IRuntimeValue? val = (ci[B], ci[C]) switch
+			{
+				(LuaInteger a, LuaInteger b) => new LuaInteger(Operation(a.value, b.value)),
+				(LuaNumber a, LuaInteger b) => new LuaNumber(Operation(a.value, b.value)),
+				(LuaInteger a, LuaNumber b) => new LuaNumber(Operation(a.value, b.value)),
+				(LuaNumber a, LuaNumber b) => new LuaNumber(Operation(a.value, b.value)),
+				_ => null
+			};
+			if (val != null)
+			{
+				ci[A] = val;
+				ci.pc += 1;
+			}
+			ci.pc += 1;
+		}
+
+		public abstract double Operation(double a, double b);
+		public abstract long Operation(long a, long b);
+	}
+
+	public abstract class TrBinaryNumOperation(byte A, byte B, byte C) : IStateTransition
+	{
+		public void Execute(CallInfo ci, LuaState luaState)
+		{
+			double? a = ci.CoerceToNumber(B);
+			double? b = ci.CoerceToNumber(C);
+			if (a != null && b != null)
+			{
+				ci[A] = new LuaNumber(Operation(a.Value, b.Value));
+				ci.pc += 1;
+			}
+			ci.pc += 1;
+		}
+		public abstract double Operation(double a, double b);
+	}
+
+	//TODO: Inaccurate, should error if both are double https://www.lua.org/source/5.4/ltm.c.html#luaT_trybinTM
+	public abstract class TrBinaryIntOperation(byte A, byte B, byte C) : IStateTransition
+	{
+		public void Execute(CallInfo ci, LuaState luaState)
+		{
+			long? a = ci.CoerceToInteger(B);
+			long? b = ci.CoerceToInteger(C);
+			if (a != null && b != null)
+			{
+				ci[A] = new LuaInteger(Operation(a.Value, b.Value));
+				ci.pc += 1;
+			}
+			ci.pc += 1;
+		}
+		public abstract long Operation(long a, long b);
+	}
+
+	public class TrAdd(byte A, byte B, byte C) : TrBinaryRealOperation(A, B, C)
+	{
+		public override double Operation(double a, double b) => a + b;
+		public override long Operation(long a, long b) => a + b;
+	}
+
+	public class TrSub(byte A, byte B, byte C) : TrBinaryRealOperation(A, B, C)
+	{
+		public override double Operation(double a, double b) => a - b;
+		public override long Operation(long a, long b) => a - b;
+	}
+
+	public class TrMul(byte A, byte B, byte C) : TrBinaryRealOperation(A, B, C)
+	{
+		public override double Operation(double a, double b) => a * b;
+		public override long Operation(long a, long b) => a * b;
+	}
+
+	public class TrMod(byte A, byte B, byte C) : TrBinaryRealOperation(A, B, C)
+	{
+		public override double Operation(double a, double b) => a % b;
+		public override long Operation(long a, long b) => a % b;
+	}
+
+	public class TrPow(byte A, byte B, byte C) : TrBinaryNumOperation(A, B, C)
+	{
+		public override double Operation(double a, double b) => Math.Pow(a, b);
+	}
+
+	public class TrDiv(byte A, byte B, byte C) : TrBinaryNumOperation(A, B, C)
+	{
+		public override double Operation(double a, double b) => a / b;
+	}
+
+	public class TrIDiv(byte A, byte B, byte C) : TrBinaryIntOperation(A, B, C)
+	{
+		public override long Operation(long a, long b) => a / b;
+	}
+
+	public class TrBAnd(byte A, byte B, byte C) : TrBinaryIntOperation(A, B, C)
+	{
+		public override long Operation(long a, long b) => a & b;
+	}
+
+	public class TrBOr(byte A, byte B, byte C) : TrBinaryIntOperation(A, B, C)
+	{
+		public override long Operation(long a, long b) => a | b;
+	}
+
+	public class TrBXor(byte A, byte B, byte C) : TrBinaryIntOperation(A, B, C)
+	{
+		public override long Operation(long a, long b) => a ^ b;
+	}
+
+	public class TrShl(byte A, byte B, byte C) : TrBinaryIntOperation(A, B, C)
+	{
+		public override long Operation(long a, long b) => a << ((byte)b);
+	}
+
+	public class TrShr(byte A, byte B, byte C) : TrBinaryIntOperation(A, B, C)
+	{
+		public override long Operation(long a, long b) => a >> ((byte)b);
+	}
+
+	public class TrMetaMethodBinary(byte A, byte B, byte C) : IStateTransition
+	{
+		public void Execute(CallInfo ci, LuaState luaState)
+		{
+			throw new NotImplementedException();
 		}
 	}
 
+	public class TrMetaMethodBinaryI(byte A, sbyte B, byte C, bool k) : IStateTransition
+	{
+		public void Execute(CallInfo ci, LuaState luaState)
+		{
+			throw new NotImplementedException();
+		}
+	}
+
+	public class TrMetaMethodBinaryK(byte A, byte B, byte C, bool k) : IStateTransition
+	{
+		public void Execute(CallInfo ci, LuaState luaState)
+		{
+			throw new NotImplementedException();
+		}
+	}
+
+	public abstract class TrUnaryRealOperation(byte A, byte B) : IStateTransition
+	{
+		public void Execute(CallInfo ci, LuaState luaState)
+		{
+			IRuntimeValue? val = ci[B] switch
+			{
+				LuaInteger a => new LuaInteger(Operation(a.value)),
+				LuaNumber a => new LuaNumber(Operation(a.value)),
+				_ => null
+			};
+			if (val != null)
+			{
+				ci[A] = val;
+				ci.pc += 1;
+			}
+			ci.pc += 1;
+		}
+
+		public abstract double Operation(double a);
+		public abstract long Operation(long a);
+	}
+
+	public abstract class TrUnaryIntOperation(byte A, byte B) : IStateTransition
+	{
+		public void Execute(CallInfo ci, LuaState luaState)
+		{
+			long? val = ci.CoerceToInteger(B);
+			if (val != null)
+			{
+				ci[A] = new LuaInteger(Operation(val.Value));
+				ci.pc += 1;
+			}
+			ci.pc += 1;
+		}
+
+		public abstract long Operation(long a);
+	}
+
+	public class TrUnaryMinus(byte A, byte B) : TrUnaryRealOperation(A, B)
+	{
+		public override long Operation(long a) => -a;
+		public override double Operation(double a) => -a;
+	}
+
+	public class TrBNot(byte A, byte B) : TrUnaryIntOperation(A, B)
+	{
+		public override long Operation(long a) => ~a;
+	}
+
+	public class TrNot(byte A, byte B) : IStateTransition
+	{
+		public void Execute(CallInfo ci, LuaState luaState)
+		{
+			ci[A] = new LuaBool(ci[B] switch
+			{
+				LuaBool b => !b.value,
+				LuaNil => true,
+				_ => false
+			});
+		}
+	}
+
+	public class TrLen(byte A, byte B) : IStateTransition
+	{
+		public void Execute(CallInfo ci, LuaState luaState)
+		{
+			ci[A] = ci[B] switch
+			{
+				LuaTable t => new LuaInteger(t.GetLength()),
+				LuaString t => new LuaInteger(t.value.Length),
+				//TODO: throw the actual error
+				_ => throw new Exception("some error")
+			};
+			ci.pc += 1;
+		}
+	}
+
+	public class TrConcat(byte A, byte B) : IStateTransition
+	{
+		public void Execute(CallInfo ci, LuaState luaState)
+		{
+			var convertedByteArray = Enumerable.Range(A, A + B - 1)
+				.SelectMany((i) => ci[i] switch
+				{
+					LuaNumber arg => Encoding.UTF8.GetBytes(arg.value.ToString()),
+					LuaInteger arg => Encoding.UTF8.GetBytes(arg.value.ToString()),
+					LuaString arg => arg.value,
+					_ => throw new Exception("some error")
+				});
+
+			ci[A] = new LuaString(convertedByteArray.ToArray());
+			ci.pc += 1;
+		}
+	}
+
+	public class TrClose(byte A) : IStateTransition
+	{
+		public void Execute(CallInfo ci, LuaState luaState)
+		{
+			throw new NotImplementedException();
+		}
+	}
+
+	public class TrTBC(byte A) : IStateTransition
+	{
+		public void Execute(CallInfo ci, LuaState luaState)
+		{
+			throw new NotImplementedException();
+		}
+	}
+
+	public class TrJmp(int sJ) : IStateTransition
+	{
+		public void Execute(CallInfo ci, LuaState luaState)
+		{
+			ci.pc += sJ;
+		}
+	}
+
+	public class TrClosure(byte A, LuaRuntimeProto KProtoBx) : IStateTransition
+	{
+		public void Execute(CallInfo ci, LuaState luaState)
+		{
+			var upValues = KProtoBx.upValues
+				.Select((upValue) => 
+					upValue.inStack
+						? ci.GetStackReference(upValue.index)
+						: ci.closure.upValues[upValue.index]
+				);
+			ci[A] = new LuaClosure(KProtoBx, upValues.ToArray());
+		}
+	}
 
 	public class TrExtraArg() : IStateTransition
 	{

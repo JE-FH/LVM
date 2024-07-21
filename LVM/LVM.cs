@@ -1,4 +1,7 @@
-﻿namespace LVM
+﻿using LVM.RuntimeType;
+using System.Text;
+
+namespace LVM
 {
 	public class InvalidInstructionException(LuaInstruction _instruction, string? message) : Exception(message)
 	{
@@ -20,79 +23,6 @@
 
 	}
 
-	public interface IRuntimeValue
-	{
-		public string TypeName { get; }
-	}
-
-	internal class LuaNumber(double _value) : IRuntimeValue
-	{
-		public double value = _value;
-		public string TypeName => "number";
-	}
-
-	internal class LuaInteger(long _value) : IRuntimeValue
-	{
-		public long value = _value;
-		public string TypeName => "integer";
-	}
-
-	internal class LuaNil() : IRuntimeValue {
-		public string TypeName => "nil";
-	}
-
-	public class LuaClosure(LuaRuntimeProto _proto) : IRuntimeValue
-	{
-		public LuaRuntimeProto proto = _proto;
-		public string TypeName => "closure";
-	}
-
-	public class LuaString(byte[] _value) : IRuntimeValue
-	{
-		public byte[] value = _value;
-		public string TypeName => "string";
-	}
-
-	internal class LuaBool(bool _value) : IRuntimeValue
-	{
-		public bool value = _value;
-		public string TypeName => "bool";
-	}
-
-	internal class LuaTable() : IRuntimeValue
-	{
-		public IRuntimeValue GetValue(IRuntimeValue index)
-		{
-			throw new NotImplementedException();
-		}
-
-		public IRuntimeValue GetValue(int index)
-		{
-			throw new NotImplementedException();
-		}
-
-		public IRuntimeValue GetValue(byte[] index)
-		{
-			throw new NotImplementedException();
-		}
-
-		public void SetValue(IRuntimeValue index, IRuntimeValue value)
-		{
-			throw new NotImplementedException();
-		}
-
-		public void SetValue(int index, IRuntimeValue value)
-		{
-			throw new NotImplementedException();
-		}
-
-		public void SetValue(byte[] index, IRuntimeValue value)
-		{
-			throw new NotImplementedException();
-		}
-		public string TypeName => "table";
-	}
-
 	public class LuaRuntimeProto {
 		public required byte[] source;
 		public required int lineDefined;
@@ -101,40 +31,103 @@
 		public required bool isVarArg;
 		public required byte maxStackSize;
 		public required IStateTransition[] transitions;
-		public required LuaUpValue[] upValues;
 		public required LuaRuntimeProto[] protos;
+		public required LuaCUpValue[] upValues;
 		public required LuaCFunctionDebugInfo debugInfo;
 	}
 
-	public class CallInfo(LuaClosure _closure, List<IRuntimeValue> _stack)
+	public class LuaValueReference(IRuntimeValue _value)
+	{
+		public IRuntimeValue value = _value;
+	}
+
+	public class LuaStack()
+	{
+		public List<LuaValueReference> stack = new();
+		public IRuntimeValue this[int index]
+		{
+			get { return stack[index].value; }
+			set { stack[index].value = value; }
+		}
+
+		public LuaValueReference GetReference(int index)
+		{
+			return stack[index];
+		}
+
+		public void Push(IRuntimeValue val)
+		{
+			stack.Add(new LuaValueReference(val));
+		}
+
+		public void Pop()
+		{
+			stack.RemoveAt(stack.Count - 1);
+		}
+
+		public void PushNils(uint count)
+		{
+			for (uint i = 0; i < count; i++)
+			{
+				Push(new LuaNil());
+			}
+		}
+	}
+
+	public class CallInfo(LuaState _luaState, LuaClosure _closure)
 	{
 		public int pc = 0;
 		public LuaClosure closure = _closure;
 		public int stackBase = 0;
-		public List<IRuntimeValue> stack = _stack;
+		public LuaState luaState = _luaState;
 		public IRuntimeValue this[int relativeIndex]
 		{
-			get => stack[stackBase + relativeIndex];
-			set => stack[stackBase + relativeIndex] = value;
+			get => luaState.stack[stackBase + relativeIndex];
+			set => luaState.stack[stackBase + relativeIndex] = value;
+		}
+
+		public LuaValueReference GetStackReference(int relativeIndex)
+		{
+			return luaState.stack.GetReference(stackBase + relativeIndex);
 		}
 
 		public T GetRegister<T>(int relativeIndex) where T : IRuntimeValue
 		{
-			var val = stack[stackBase + relativeIndex];
+			var val = this[relativeIndex];
 			if (val is T realValue)
 			{
 				return realValue;
 			} else
 			{
-				throw new Exception("some error");
+				throw new WrongRegisterTypeException(stackBase + relativeIndex, luaState.stack[stackBase + relativeIndex]);
 			}
+		}
+
+		public double? CoerceToNumber(int relativeIndex)
+		{
+			return this[relativeIndex] switch
+			{
+				LuaNumber n => n.value,
+				LuaInteger i => i.value,
+				_ => null
+			};
+		}
+
+		public long? CoerceToInteger(int relativeIndex)
+		{
+			return this[relativeIndex] switch
+			{
+				LuaNumber n => (long)Math.Floor(n.value),
+				LuaInteger i => i.value,
+				_ => null
+			};
 		}
 	}
 
 	public class LuaState()
 	{
 		public List<CallInfo> callStack = [];
-		public List<IRuntimeValue> stack = [];
+		public LuaStack stack = new();
 	}
 
 	public class LVM
@@ -142,19 +135,19 @@
 		public static void RunFile(LuaCFile file)
 		{
 			var state = new LuaState();
-			var closure = new LuaClosure(MapProtoToRuntime(file.topLevelFunction));
-			state.stack.Add(closure);
+			var envUpValue = new LuaTable();
+			var topUpValue = new LuaTable();
+			topUpValue.SetValue(Encoding.UTF8.GetBytes("__ENV"), envUpValue);
+			var closure = new LuaClosure(MapProtoToRuntime(file.topLevelFunction), [new LuaValueReference(topUpValue)]);
+			state.stack.Push(closure);
 			Call(state, 0);
 		}
 
 		private static void Call(LuaState luaState, int index)
 		{
 			var closure = (LuaClosure)luaState.stack[index];
-			for (int i = luaState.stack.Count; i < index + 1 + closure.proto.maxStackSize; i++)
-			{
-				luaState.stack.Add(new LuaNil());
-			}
-			var callInfo = new CallInfo(closure, luaState.stack);
+			luaState.stack.PushNils(closure.proto.maxStackSize);
+			var callInfo = new CallInfo(luaState, closure);
 			luaState.callStack.Add(callInfo);
 			while (Step(luaState)) { }
 		}
@@ -188,7 +181,7 @@
 			};
 		}
 
-		private static T CheckedConstant<T>(ILuaConstant constant)
+		private static T CheckedConstant<T>(ILuaConstant constant) where T : ILuaConstant
 		{
 			var runtimeValue = ConstantToValue(constant);
 			if (runtimeValue is T checkedValue)
@@ -203,6 +196,9 @@
 
 		private static LuaRuntimeProto MapProtoToRuntime(LuaProto proto)
 		{
+			var protos = proto.protos
+				.Select(MapProtoToRuntime)
+				.ToArray();
 			return new LuaRuntimeProto
 			{
 				source = proto.source,
@@ -215,10 +211,8 @@
 					proto,
 					proto.code
 				).ToArray(),
+				protos = protos,
 				upValues = proto.upValues,
-				protos = proto.protos
-					.Select(MapProtoToRuntime)
-					.ToArray(),
 				debugInfo = proto.debugInfo
 			};
 		}
@@ -230,74 +224,161 @@
 			while (enumerator.MoveNext())
 			{
 				var ins = enumerator.Current;
-				yield return ins.DecodeOpCode() switch
+				yield return ins.OpCode switch
 				{
-					InstructionEnum.Move => new TrMove(ins.DecodeA(), ins.DecodeB()),
-					InstructionEnum.LoadI => new TrLoadI(ins.DecodeA(), ins.DecodeSBx()),
-					InstructionEnum.LoadF => new TrLoadF(ins.DecodeA(), ins.DecodeSBx()),
+					InstructionEnum.Move => new TrMove(ins.A, ins.B),
+					InstructionEnum.LoadI => new TrLoadI(ins.A, ins.SBx),
+					InstructionEnum.LoadF => new TrLoadF(ins.A, ins.SBx),
 					InstructionEnum.LoadK => new TrLoadK(
-						ins.DecodeA(),
-						(LuaString) ConstantToValue(proto.constants[ins.DecodeBx()])
+						ins.A,
+						(LuaString) ConstantToValue(proto.constants[ins.Bx])
 					),
 					InstructionEnum.LoadKX => new TrLoadKx(
-						ins.DecodeA(),
+						ins.A,
 						ConstantToValue(proto.constants[GetExtraArg(enumerator)])
 					),
-					InstructionEnum.LoadFalse => new TrLoadFalse(ins.DecodeA()),
-					InstructionEnum.LFalseSkip => new TrLFalseSkip(ins.DecodeA()),
-					InstructionEnum.LoadTrue => new TrLoadTrue(ins.DecodeA()),
-					InstructionEnum.LoadNil => new TrLoadNil(ins.DecodeA(), ins.DecodeB()),
-					InstructionEnum.GetUpVal => new TrGetUpVal(ins.DecodeA(), ins.DecodeB()),
-					InstructionEnum.SetUpVal => new TrSetUpVal(ins.DecodeA(), ins.DecodeB()),
-					InstructionEnum.GetTabUp => new TrGetTabUp(ins.DecodeA(), ins.DecodeB(), ins.DecodeC()),
-					InstructionEnum.GetTable => new TrGetTable(ins.DecodeA(), ins.DecodeB(), ins.DecodeC()),
-					InstructionEnum.GetI => new TrGetI(ins.DecodeA(), ins.DecodeB(), ins.DecodeC()),
+					InstructionEnum.LoadFalse => new TrLoadFalse(ins.A),
+					InstructionEnum.LFalseSkip => new TrLFalseSkip(ins.A),
+					InstructionEnum.LoadTrue => new TrLoadTrue(ins.A),
+					InstructionEnum.LoadNil => new TrLoadNil(ins.A, ins.B),
+					InstructionEnum.GetUpVal => new TrGetUpVal(ins.A, ins.B),
+					InstructionEnum.SetUpVal => new TrSetUpVal(ins.A, ins.B),
+					InstructionEnum.GetTabUp => new TrGetTabUp(ins.A, ins.B, CheckedConstant<LuaStringConstant>(proto.constants[ins.C]).data),
+					InstructionEnum.GetTable => new TrGetTable(ins.A, ins.B, ins.C),
+					InstructionEnum.GetI => new TrGetI(ins.A, ins.B, ins.C),
 					InstructionEnum.GetField => new TrGetField(
-						ins.DecodeA(),
-						ins.DecodeB(),
-						CheckedConstant<LuaString>(proto.constants[GetExtraArg(enumerator)]).value
+						ins.A,
+						ins.B,
+						CheckedConstant<LuaStringConstant>(proto.constants[GetExtraArg(enumerator)]).data
 					),
-					InstructionEnum.SetTabUp => new TrSetTabUp(ins.DecodeA(), ins.DecodeB(), ins.DecodeC()),
-					InstructionEnum.SetTable => ins.DecodeK() switch
+					InstructionEnum.SetTabUp => ins.K 
+						? new TrSetFieldK(
+							ins.A,
+							CheckedConstant<LuaStringConstant>(proto.constants[ins.B]).data,
+							ConstantToValue(proto.constants[ins.C])
+						)
+						: new TrSetFieldR(
+							ins.A,
+							CheckedConstant<LuaStringConstant>(proto.constants[ins.B]).data,
+							ins.C
+						),
+					InstructionEnum.SetTable => ins.K switch
 					{
 						true => new TrSetTableK(
-							ins.DecodeA(),
-							ins.DecodeB(),
-							ConstantToValue(proto.constants[ins.DecodeC()])
+							ins.A,
+							ins.B,
+							ConstantToValue(proto.constants[ins.C])
 						),
-						false => new TrSetTableC(
-							ins.DecodeA(),
-							ins.DecodeB(),
-							ins.DecodeC()
-						)
+						false => new TrSetTableC(ins.A, ins.B, ins.C)
 					},
-					InstructionEnum.SetI => ins.DecodeK() switch
+					InstructionEnum.SetI => ins.K switch
 					{
 						true => new TrSetIK(
-							ins.DecodeA(),
-							ins.DecodeB(),
-							ConstantToValue(proto.constants[ins.DecodeC()])
+							ins.A,
+							ins.B,
+							ConstantToValue(proto.constants[ins.C])
 						),
-						false => new TrSetIR(
-							ins.DecodeA(),
-							ins.DecodeB(),
-							ins.DecodeC()
-						)
+						false => new TrSetIR(ins.A, ins.B, ins.C)
 					},
-					InstructionEnum.SetField => ins.DecodeK() switch
+					InstructionEnum.SetField => ins.K switch
 					{
 						true => new TrSetFieldK(
-							ins.DecodeA(),
-							CheckedConstant<LuaString>(proto.constants[ins.DecodeB()]).value,
-							ConstantToValue(proto.constants[ins.DecodeC()])
+							ins.A,
+							CheckedConstant<LuaStringConstant>(proto.constants[ins.B]).data,
+							ConstantToValue(proto.constants[ins.C])
 						),
 						false => new TrSetFieldR(
-							ins.DecodeA(),
-							CheckedConstant<LuaString>(proto.constants[ins.DecodeB()]).value,
-							ins.DecodeC()
+							ins.A,
+							CheckedConstant<LuaStringConstant>(proto.constants[ins.B]).data,
+							ins.C
 						)
 					},
-					InstructionEnum.NewTable => new TrNewTable(ins.DecodeA())
+					InstructionEnum.NewTable => new TrNewTable(ins.A),
+					InstructionEnum.Self => ins.K switch
+					{
+						true => new TrSelfK(
+							ins.A,
+							ins.B,
+							CheckedConstant<LuaStringConstant>(proto.constants[ins.C]).data
+						),
+						false => new TrSelfR(ins.A, ins.B, ins.C)
+					},
+					InstructionEnum.AddI => new TrAddI(ins.A, ins.B, unchecked((sbyte)ins.C)),
+					InstructionEnum.AddK => new TrAddK(
+						ins.A,
+						ins.B,
+						CheckedConstant<LuaFloatConstant>(proto.constants[ins.C]).value
+					),
+					InstructionEnum.SubK => new TrSubK(
+						ins.A,
+						ins.B,
+						CheckedConstant<LuaFloatConstant>(proto.constants[ins.C]).value
+					),
+					InstructionEnum.MulK => new TrMulK(
+						ins.A,
+						ins.B,
+						CheckedConstant<LuaFloatConstant>(proto.constants[ins.C]).value
+					),
+					InstructionEnum.ModK => new TrModK(
+						ins.A,
+						ins.B,
+						CheckedConstant<LuaFloatConstant>(proto.constants[ins.C]).value
+					),
+					InstructionEnum.PowK => new TrPowK(
+						ins.A,
+						ins.B,
+						CheckedConstant<LuaFloatConstant>(proto.constants[ins.C]).value
+					),
+					InstructionEnum.DivK => new TrDivK(
+						ins.A,
+						ins.B,
+						CheckedConstant<LuaFloatConstant>(proto.constants[ins.C]).value
+					),
+					InstructionEnum.IDivK => new TrIDivK(
+						ins.A,
+						ins.B,
+						CheckedConstant<LuaFloatConstant>(proto.constants[ins.C]).value
+					),
+					InstructionEnum.BAndK => new TrBAndK(
+						ins.A,
+						ins.B,
+						CheckedConstant<LuaIntegerConstant>(proto.constants[ins.C]).value
+					),
+					InstructionEnum.BOrK => new TrBOrK(
+						ins.A,
+						ins.B,
+						CheckedConstant<LuaIntegerConstant>(proto.constants[ins.C]).value
+					),
+					InstructionEnum.BXorK => new TrBXorK(
+						ins.A,
+						ins.B,
+						CheckedConstant<LuaIntegerConstant>(proto.constants[ins.C]).value
+					),
+					InstructionEnum.ShrI => new TrShrI(ins.A, ins.B, ins.SC),
+					InstructionEnum.ShlI => new TrShlI(ins.A, ins.B, ins.SC),
+					InstructionEnum.Add => new TrAdd(ins.A, ins.B, ins.C),
+					InstructionEnum.Sub => new TrSub(ins.A, ins.B, ins.C),
+					InstructionEnum.Mul => new TrMul(ins.A, ins.B, ins.C),
+					InstructionEnum.Mod => new TrMod(ins.A, ins.B, ins.C),
+					InstructionEnum.Pow => new TrPow(ins.A, ins.B, ins.C),
+					InstructionEnum.Div => new TrDiv(ins.A, ins.B, ins.C),
+					InstructionEnum.IDiv => new TrIDiv(ins.A, ins.B, ins.C),
+					InstructionEnum.BAnd => new TrBAnd(ins.A, ins.B, ins.C),
+					InstructionEnum.BOr => new TrBOr(ins.A, ins.B, ins.C),
+					InstructionEnum.BXor => new TrBXor(ins.A, ins.B, ins.C),
+					InstructionEnum.Shl => new TrShl(ins.A, ins.B, ins.C),
+					InstructionEnum.Shr => new TrShr(ins.A, ins.B, ins.C),
+					InstructionEnum.MMBIN => new TrMetaMethodBinary(ins.A, ins.B, ins.C),
+					InstructionEnum.MMBINI => new TrMetaMethodBinaryI(ins.A, ins.SB, ins.C, ins.K),
+					InstructionEnum.MMBINK => new TrMetaMethodBinaryK(ins.A, ins.B, ins.C, ins.K),
+					InstructionEnum.UNM => new TrUnaryMinus(ins.A, ins.B),
+					InstructionEnum.BNot => new TrBNot(ins.A, ins.B),
+					InstructionEnum.Not => new TrNot(ins.A, ins.B),
+					InstructionEnum.Len => new TrLen(ins.A, ins.B),
+					InstructionEnum.Concat => new TrConcat(ins.A, ins.B),
+					InstructionEnum.Close => new TrClose(ins.A),
+					InstructionEnum.TBC => new TrTBC(ins.A),
+					InstructionEnum.Jmp => new TrJmp(ins.SJ)
 				};
 			}
 		}
@@ -308,11 +389,11 @@
 			{
 				throw new ExpectedExtraArgException("Expected extra arg after LoadKx");
 			}
-			if (iterator.Current.DecodeOpCode() != InstructionEnum.ExtraArg)
+			if (iterator.Current.OpCode != InstructionEnum.ExtraArg)
 			{
 				throw new ExpectedExtraArgException("Expected extra arg after LoadKx");
 			}
-			return iterator.Current.DecodeAx();
+			return iterator.Current.Ax;
 		}
 	}
 }

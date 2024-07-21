@@ -126,66 +126,39 @@ namespace LVM
 		public readonly byte c = bytes[2];
 		public readonly byte d = bytes[3];
 
-		public InstructionEnum DecodeOpCode()
-		{
-			return (InstructionEnum)(a & 0b0111_1111u);
-		}
+		public InstructionEnum OpCode => (InstructionEnum)(a & 0b0111_1111u);
+		public readonly byte A => unchecked((byte)(
+			((a & 0b1000_0000u) >> 7) | ((b & 0b0111_1111u) << 1)
+		));
+		
+		public readonly byte B => c;
+		public readonly sbyte SB => unchecked((sbyte)c);
+		
+		public readonly byte C => d;
+		public readonly sbyte SC => unchecked((sbyte)d);
 
-		public byte DecodeA()
-		{
-			return unchecked((byte)(
-				((a & 0b1000_0000u) >> 7) | ((b & 0b0111_1111u) << 1)
-			));
-		}
+		public readonly bool K => (b & 0b1000_0000u) != 0;
+		
+		public readonly uint Bx => ((b & 0b1000_0000u) >> 7) |
+			(((uint)c) << 1) |
+			(((uint)d) << 9);
+		
+		public readonly int SBx => unchecked((int)(
+			((b & 0b1000_0000u) >> 7) |
+			(((uint)c) << 1) |
+			(((uint)d) << 9)
+		) + 1) - (1 << 16);
 
-		public bool DecodeK()
-		{
-			return (b & 0b1000_0000u) != 0;
-		}
+		public readonly uint Ax => ((a & 0b1000_0000u) >> 7) |
+			((b & 0b1111_1111u) << 1) |
+			(((uint)c) << 9) |
+			(((uint)d) << 17);
 
-		public byte DecodeB()
-		{
-			return c;
-		}
-
-		public byte DecodeC()
-		{
-			return d;
-		}
-
-		public uint DecodeBx()
-		{
-			return ((b & 0b1000_0000u) >> 7) |
-					(((uint)c) << 1) |
-					(((uint)d) << 9);
-		}
-
-		public int DecodeSBx()
-		{
-			return unchecked((int)(
-				((b & 0b1000_0000u) >> 7) |
-				(((uint)c) << 1) |
-				(((uint)d) << 9)
-			) + 1) - (1 << 16);
-		}
-
-		public uint DecodeAx()
-		{
-			return
-				((a & 0b1000_0000u) >> 7) |
-				((b & 0b1111_1111u) << 1) |
-				(((uint)c) << 9) |
-				(((uint)d) << 17);
-		}
-
-		public int DecodeSJ()
-		{
-			return unchecked((int)(
-				((a & 0b1000_0000u) >> 7) |
-				((b & 0b1111_1111u) << 1) |
-				(((uint)c) << 9) |
-				(((uint)d) << 17)
-			) + 1) - (1 << 24);
-		}
+		public readonly int SJ => unchecked((int)(
+			((a & 0b1000_0000u) >> 7) |
+			((b & 0b1111_1111u) << 1) |
+			(((uint)c) << 9) |
+			(((uint)d) << 17)
+		) + 1) - (1 << 24);
 	}
 }

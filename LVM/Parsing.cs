@@ -53,7 +53,7 @@ namespace LVM
 		public double readConstantType = _readConstantType;
 	}
 
-	public enum LuaType : byte
+	public enum LuaTypeTag : byte
 	{
 		Nil = 0,
 		Boolean = 1,
@@ -70,12 +70,12 @@ namespace LVM
 	public enum LuaVariantTag : byte
 	{
 		LuaVNil = 0,
-		LuaVFalse = LuaType.Boolean | (0 << 4),
-		LuaVTrue = LuaType.Boolean | (1 << 4),
-		LuaVNumInt = LuaType.Number | (0 << 4),
-		LuaVNumFlt = LuaType.Number | (1 << 4),
-		LuaVShrStr = LuaType.String | (0 << 4),
-		LuaVLngStr = LuaType.String | (1 << 4),
+		LuaVFalse = LuaTypeTag.Boolean | (0 << 4),
+		LuaVTrue = LuaTypeTag.Boolean | (1 << 4),
+		LuaVNumInt = LuaTypeTag.Number | (0 << 4),
+		LuaVNumFlt = LuaTypeTag.Number | (1 << 4),
+		LuaVShrStr = LuaTypeTag.String | (0 << 4),
+		LuaVLngStr = LuaTypeTag.String | (1 << 4),
 	}
 
 	public class LuaCReader()
@@ -179,16 +179,16 @@ namespace LVM
 			return container;
 		}
 
-		private LuaUpValue[] ParseUpValues(Stream byteStream)
+		private LuaCUpValue[] ParseUpValues(Stream byteStream)
 		{
 			int upValueCount = byteStream.ReadSignedSizeOrThrow("amount of upvalues");
-			var container = new LuaUpValue[upValueCount];
+			var container = new LuaCUpValue[upValueCount];
 			for (int i = 0; i < upValueCount; i++)
 			{
-				var inStack = byteStream.ReadOrThrow("in stack value for upvalue");
+				var inStack = byteStream.ReadOrThrow("in stack value for upvalue") != 0;
 				var index = byteStream.ReadOrThrow("index value for upvalue");
 				var kind = byteStream.ReadOrThrow("kind value for upvalue");
-				container[i] = new LuaUpValue
+				container[i] = new LuaCUpValue
 				{
 					inStack = inStack,
 					index = index,
@@ -364,9 +364,9 @@ namespace LVM
 
 	}
 
-	public struct LuaUpValue
+	public struct LuaCUpValue
 	{
-		public required byte inStack;
+		public required bool inStack;
 		public required byte index;
 		public required byte kind;
 	}
@@ -402,8 +402,10 @@ namespace LVM
 		public required byte maxStackSize;
 		public required LuaInstruction[] code;
 		public required ILuaConstant[] constants;
-		public required LuaUpValue[] upValues;
+		public required LuaCUpValue[] upValues;
 		public required LuaProto[] protos;
 		public required LuaCFunctionDebugInfo debugInfo;
+
+		
 	}
 }

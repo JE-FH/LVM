@@ -115,7 +115,7 @@ namespace LVMTest
 			var parsed = reader.ParseLuaCFile(testFile);
 
 			var instructions = parsed.topLevelFunction.code
-				.Select(x => x.DecodeOpCode());
+				.Select(x => x.OpCode);
 
 			Assert.Equal(instructions.ToArray(), [
 				InstructionEnum.VarArgPrep,
@@ -148,12 +148,12 @@ namespace LVMTest
 			var parsed = reader.ParseLuaCFile(testFile);
 			var instruction = parsed.topLevelFunction.code[pc];
 
-			Assert.Equal(expectedOpcode, instruction.DecodeOpCode());
+			Assert.Equal(expectedOpcode, instruction.OpCode);
 
-			Assert.Equal(expectedA, instruction.DecodeA());
-			Assert.Equal(expectedK, instruction.DecodeK());
-			Assert.Equal(expectedB, instruction.DecodeB());
-			Assert.Equal(expectedC, instruction.DecodeC());
+			Assert.Equal(expectedA, instruction.A);
+			Assert.Equal(expectedK, instruction.K);
+			Assert.Equal(expectedB, instruction.B);
+			Assert.Equal(expectedC, instruction.C);
 		}
 
 		[Fact]
@@ -165,10 +165,10 @@ namespace LVMTest
 			var parsed = reader.ParseLuaCFile(testFile);
 			var instruction = parsed.topLevelFunction.code[63];
 
-			Assert.Equal(InstructionEnum.LoadK, instruction.DecodeOpCode());
+			Assert.Equal(InstructionEnum.LoadK, instruction.OpCode);
 
-			Assert.Equal(15, instruction.DecodeA());
-			Assert.Equal(11u, instruction.DecodeBx());
+			Assert.Equal(15, instruction.A);
+			Assert.Equal(11u, instruction.Bx);
 		}
 
 		[Fact]
@@ -180,10 +180,10 @@ namespace LVMTest
 			var parsed = reader.ParseLuaCFile(testFile);
 			var instruction = parsed.topLevelFunction.code[40];
 
-			Assert.Equal(InstructionEnum.LoadI, instruction.DecodeOpCode());
+			Assert.Equal(InstructionEnum.LoadI, instruction.OpCode);
 
-			Assert.Equal(6, instruction.DecodeA());
-			Assert.Equal(1, instruction.DecodeSBx());
+			Assert.Equal(6, instruction.A);
+			Assert.Equal(1, instruction.SBx);
 		}
 
 		[Fact]
@@ -195,9 +195,9 @@ namespace LVMTest
 			var parsed = reader.ParseLuaCFile(testFile);
 			var instruction = parsed.topLevelFunction.code[12];
 
-			Assert.Equal(InstructionEnum.ExtraArg, instruction.DecodeOpCode());
+			Assert.Equal(InstructionEnum.ExtraArg, instruction.OpCode);
 
-			Assert.Equal(0u, instruction.DecodeAx());
+			Assert.Equal(0u, instruction.Ax);
 		}
 
 		[Fact]
@@ -209,9 +209,9 @@ namespace LVMTest
 			var parsed = reader.ParseLuaCFile(testFile);
 			var instruction = parsed.topLevelFunction.code[58];
 
-			Assert.Equal(InstructionEnum.Jmp, instruction.DecodeOpCode());
+			Assert.Equal(InstructionEnum.Jmp, instruction.OpCode);
 
-			Assert.Equal(1, instruction.DecodeSJ());
+			Assert.Equal(1, instruction.SJ);
 		}
 	}
 }
