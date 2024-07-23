@@ -1,4 +1,5 @@
 ﻿using System.Reflection.Metadata;
+using System.Runtime.InteropServices.Marshalling;
 using System.Security.Cryptography;
 using System.Text;
 using LVM.RuntimeType;
@@ -706,7 +707,7 @@ namespace LVM
 		}
 	}
 
-	public class TrClosure(byte A, LuaRuntimeProto KProtoBx) : IStateTransition
+	public class TrClosure(byte A, CompiledProto KProtoBx) : IStateTransition
 	{
 		public void Execute(CallInfo ci, LuaState luaState)
 		{
@@ -717,6 +718,7 @@ namespace LVM
 						: ci.closure.upValues[upValue.index]
 				);
 			ci[A] = new LuaClosure(KProtoBx, upValues.ToArray());
+			ci.pc += 1;
 		}
 	}
 
@@ -730,6 +732,24 @@ namespace LVM
 				stackBase = ci.stackBase + A + 1
 			};
 			luaState.callStack.Add(topCi);
+			ci.pc += 1;
+		}
+	}
+
+	public class TrReturn(byte A, byte B, byte C, bool k) : IStateTransition
+	{
+		public void Execute(CallInfo ci, LuaState luaState)
+		{
+			luaState.callStack.RemoveAt(luaState.callStack.Count - 1);
+		}
+	}
+
+	public class TrNOP() : IStateTransition
+	{
+		public void Execute(CallInfo ci, LuaState luaState)
+		{
+			ci.pc += 1;
+			return;
 		}
 	}
 

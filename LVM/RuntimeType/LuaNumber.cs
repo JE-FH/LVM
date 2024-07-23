@@ -1,5 +1,8 @@
-﻿namespace LVM.RuntimeType
+﻿using System.Diagnostics;
+
+namespace LVM.RuntimeType
 {
+	[DebuggerDisplay("{value}")]
 	public struct LuaNumber(double _value) : IRuntimeValue
 	{
 		public double value = _value;

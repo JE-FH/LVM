@@ -1,5 +1,8 @@
-﻿namespace LVM.RuntimeType
+﻿using System.Diagnostics;
+
+namespace LVM.RuntimeType
 {
+	[DebuggerDisplay("{value}")]
 	public class LuaBool(bool _value) : IRuntimeValue
 	{
 		public bool value = _value;

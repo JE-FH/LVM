@@ -5,9 +5,9 @@ namespace LVM.RuntimeType
 	public class LuaClosure : IRuntimeValue
 	{
 		public LuaValueReference[] upValues;
-		public LuaRuntimeProto proto;
+		public CompiledProto proto;
 
-		public LuaClosure(LuaRuntimeProto _proto, LuaValueReference[] _upValues)
+		public LuaClosure(CompiledProto _proto, LuaValueReference[] _upValues)
 		{
 			if (_proto.upValues.Length != _upValues.Length)
 			{

@@ -1,4 +1,5 @@
 ﻿using LVM.RuntimeType;
+using System.Runtime.CompilerServices;
 using System.Text;
 
 namespace LVM
@@ -23,7 +24,7 @@ namespace LVM
 
 	}
 
-	public class LuaRuntimeProto {
+	public class CompiledProto {
 		public required byte[] source;
 		public required int lineDefined;
 		public required int lastLineDefined;
@@ -31,7 +32,6 @@ namespace LVM
 		public required bool isVarArg;
 		public required byte maxStackSize;
 		public required IStateTransition[] transitions;
-		public required LuaRuntimeProto[] protos;
 		public required LuaCUpValue[] upValues;
 		public required LuaCFunctionDebugInfo debugInfo;
 	}
@@ -72,6 +72,8 @@ namespace LVM
 				Push(new LuaNil());
 			}
 		}
+
+		public int Length => stack.Count;
 	}
 
 	public class CallInfo(LuaState _luaState, LuaClosure _closure)
@@ -124,50 +126,57 @@ namespace LVM
 		}
 	}
 
-	public class LuaState()
+	public class LuaState
 	{
 		public List<CallInfo> callStack = [];
 		public LuaStack stack = new();
-	}
-
-	public class LVM
-	{
-		public static void RunFile(LuaCFile file)
+		public LuaTable envTable = new();
+		public LuaState()
 		{
-			var state = new LuaState();
-			var envUpValue = new LuaTable();
-			var topUpValue = new LuaTable();
-			topUpValue.SetValue(Encoding.UTF8.GetBytes("__ENV"), envUpValue);
-			var closure = new LuaClosure(MapProtoToRuntime(file.topLevelFunction), [new LuaValueReference(topUpValue)]);
-			state.stack.Push(closure);
-			Call(state, 0);
+			envTable = new LuaTable();
 		}
 
-		private static void Call(LuaState luaState, int index)
+		public void RunFunction(LuaCFile luaCFile)
 		{
-			var closure = (LuaClosure)luaState.stack[index];
-			luaState.stack.PushNils(closure.proto.maxStackSize);
-			var callInfo = new CallInfo(luaState, closure);
-			luaState.callStack.Add(callInfo);
-			while (Step(luaState)) { }
+			var closure = new LuaClosure(
+				LuaTransitionCompiler.CompileProto(
+					luaCFile.topLevelFunction
+				),
+				[new LuaValueReference(envTable)]
+			);
+
+			stack.Push(closure);
+			Call(stack.Length - 1);
 		}
 
-		private static bool Step(LuaState luaState)
+		private void Call(int index)
 		{
-			if (luaState.callStack.Count == 0)
+			var closure = (LuaClosure)stack[index];
+			stack.PushNils(closure.proto.maxStackSize);
+			var callInfo = new CallInfo(this, closure);
+			callStack.Add(callInfo);
+			while (Step()) { }
+		}
+
+		private bool Step()
+		{
+			if (callStack.Count == 0)
 			{
 				return false;
 			}
 
-			var callInfo = luaState.callStack[luaState.callStack.Count];
+			var callInfo = callStack[callStack.Count - 1];
 
 			var nextTransition = callInfo.closure.proto.transitions[callInfo.pc];
 
-			nextTransition.Execute(callInfo, luaState);
+			nextTransition.Execute(callInfo, this);
 
 			return true;
 		}
+	}
 
+	public class LuaTransitionCompiler
+	{
 		private static IRuntimeValue ConstantToValue(ILuaConstant constant)
 		{
 			return constant switch
@@ -181,7 +190,7 @@ namespace LVM
 			};
 		}
 
-		private static T CheckedConstant<T>(ILuaConstant constant) where T : ILuaConstant
+		private static T CheckedConstant<T>(ILuaConstant constant) where T : IRuntimeValue
 		{
 			var runtimeValue = ConstantToValue(constant);
 			if (runtimeValue is T checkedValue)
@@ -194,12 +203,12 @@ namespace LVM
 			}
 		}
 
-		private static LuaRuntimeProto MapProtoToRuntime(LuaProto proto)
+		public static CompiledProto CompileProto(LuaProto proto)
 		{
 			var protos = proto.protos
-				.Select(MapProtoToRuntime)
+				.Select(CompileProto)
 				.ToArray();
-			return new LuaRuntimeProto
+			return new CompiledProto
 			{
 				source = proto.source,
 				lineDefined = proto.lineDefined,
@@ -207,20 +216,18 @@ namespace LVM
 				numParams = proto.numParams,
 				isVarArg = proto.isVarArg,
 				maxStackSize = proto.maxStackSize,
-				transitions = InstructionToTransitions(
-					proto,
-					proto.code
-				).ToArray(),
-				protos = protos,
+				transitions = 
+					InstructionToTransitions(proto)
+					.ToArray(),
 				upValues = proto.upValues,
 				debugInfo = proto.debugInfo
 			};
 		}
 
 
-		private static IEnumerable<IStateTransition> InstructionToTransitions(LuaProto proto, IEnumerable<LuaInstruction> instruction)
+		private static IEnumerable<IStateTransition> InstructionToTransitions(LuaProto proto)
 		{
-			var enumerator = instruction.GetEnumerator();
+			var enumerator = proto.code.AsEnumerable().GetEnumerator();
 			while (enumerator.MoveNext())
 			{
 				var ins = enumerator.Current;
@@ -243,23 +250,23 @@ namespace LVM
 					InstructionEnum.LoadNil => new TrLoadNil(ins.A, ins.B),
 					InstructionEnum.GetUpVal => new TrGetUpVal(ins.A, ins.B),
 					InstructionEnum.SetUpVal => new TrSetUpVal(ins.A, ins.B),
-					InstructionEnum.GetTabUp => new TrGetTabUp(ins.A, ins.B, CheckedConstant<LuaStringConstant>(proto.constants[ins.C]).data),
+					InstructionEnum.GetTabUp => new TrGetTabUp(ins.A, ins.B, CheckedConstant<LuaString>(proto.constants[ins.C]).value),
 					InstructionEnum.GetTable => new TrGetTable(ins.A, ins.B, ins.C),
 					InstructionEnum.GetI => new TrGetI(ins.A, ins.B, ins.C),
 					InstructionEnum.GetField => new TrGetField(
 						ins.A,
 						ins.B,
-						CheckedConstant<LuaStringConstant>(proto.constants[GetExtraArg(enumerator)]).data
+						CheckedConstant<LuaString>(proto.constants[GetExtraArg(enumerator)]).value
 					),
 					InstructionEnum.SetTabUp => ins.K 
-						? new TrSetFieldK(
+						? new TrSetTabUpK(
 							ins.A,
-							CheckedConstant<LuaStringConstant>(proto.constants[ins.B]).data,
+							CheckedConstant<LuaString>(proto.constants[ins.B]).value,
 							ConstantToValue(proto.constants[ins.C])
 						)
-						: new TrSetFieldR(
+						: new TrSetTabUpR(
 							ins.A,
-							CheckedConstant<LuaStringConstant>(proto.constants[ins.B]).data,
+							CheckedConstant<LuaString>(proto.constants[ins.B]).value,
 							ins.C
 						),
 					InstructionEnum.SetTable => ins.K switch
@@ -284,12 +291,12 @@ namespace LVM
 					{
 						true => new TrSetFieldK(
 							ins.A,
-							CheckedConstant<LuaStringConstant>(proto.constants[ins.B]).data,
+							CheckedConstant<LuaString>(proto.constants[ins.B]).value,
 							ConstantToValue(proto.constants[ins.C])
 						),
 						false => new TrSetFieldR(
 							ins.A,
-							CheckedConstant<LuaStringConstant>(proto.constants[ins.B]).data,
+							CheckedConstant<LuaString>(proto.constants[ins.B]).value,
 							ins.C
 						)
 					},
@@ -299,7 +306,7 @@ namespace LVM
 						true => new TrSelfK(
 							ins.A,
 							ins.B,
-							CheckedConstant<LuaStringConstant>(proto.constants[ins.C]).data
+							CheckedConstant<LuaString>(proto.constants[ins.C]).value
 						),
 						false => new TrSelfR(ins.A, ins.B, ins.C)
 					},
@@ -307,52 +314,52 @@ namespace LVM
 					InstructionEnum.AddK => new TrAddK(
 						ins.A,
 						ins.B,
-						CheckedConstant<LuaFloatConstant>(proto.constants[ins.C]).value
+						CheckedConstant<LuaNumber>(proto.constants[ins.C]).value
 					),
 					InstructionEnum.SubK => new TrSubK(
 						ins.A,
 						ins.B,
-						CheckedConstant<LuaFloatConstant>(proto.constants[ins.C]).value
+						CheckedConstant<LuaNumber>(proto.constants[ins.C]).value
 					),
 					InstructionEnum.MulK => new TrMulK(
 						ins.A,
 						ins.B,
-						CheckedConstant<LuaFloatConstant>(proto.constants[ins.C]).value
+						CheckedConstant<LuaNumber>(proto.constants[ins.C]).value
 					),
 					InstructionEnum.ModK => new TrModK(
 						ins.A,
 						ins.B,
-						CheckedConstant<LuaFloatConstant>(proto.constants[ins.C]).value
+						CheckedConstant<LuaNumber>(proto.constants[ins.C]).value
 					),
 					InstructionEnum.PowK => new TrPowK(
 						ins.A,
 						ins.B,
-						CheckedConstant<LuaFloatConstant>(proto.constants[ins.C]).value
+						CheckedConstant<LuaNumber>(proto.constants[ins.C]).value
 					),
 					InstructionEnum.DivK => new TrDivK(
 						ins.A,
 						ins.B,
-						CheckedConstant<LuaFloatConstant>(proto.constants[ins.C]).value
+						CheckedConstant<LuaNumber>(proto.constants[ins.C]).value
 					),
 					InstructionEnum.IDivK => new TrIDivK(
 						ins.A,
 						ins.B,
-						CheckedConstant<LuaFloatConstant>(proto.constants[ins.C]).value
+						CheckedConstant<LuaNumber>(proto.constants[ins.C]).value
 					),
 					InstructionEnum.BAndK => new TrBAndK(
 						ins.A,
 						ins.B,
-						CheckedConstant<LuaIntegerConstant>(proto.constants[ins.C]).value
+						CheckedConstant<LuaInteger>(proto.constants[ins.C]).value
 					),
 					InstructionEnum.BOrK => new TrBOrK(
 						ins.A,
 						ins.B,
-						CheckedConstant<LuaIntegerConstant>(proto.constants[ins.C]).value
+						CheckedConstant<LuaInteger>(proto.constants[ins.C]).value
 					),
 					InstructionEnum.BXorK => new TrBXorK(
 						ins.A,
 						ins.B,
-						CheckedConstant<LuaIntegerConstant>(proto.constants[ins.C]).value
+						CheckedConstant<LuaInteger>(proto.constants[ins.C]).value
 					),
 					InstructionEnum.ShrI => new TrShrI(ins.A, ins.B, ins.SC),
 					InstructionEnum.ShlI => new TrShlI(ins.A, ins.B, ins.SC),
@@ -378,7 +385,14 @@ namespace LVM
 					InstructionEnum.Concat => new TrConcat(ins.A, ins.B),
 					InstructionEnum.Close => new TrClose(ins.A),
 					InstructionEnum.TBC => new TrTBC(ins.A),
-					InstructionEnum.Jmp => new TrJmp(ins.SJ)
+					InstructionEnum.Jmp => new TrJmp(ins.SJ),
+					InstructionEnum.Closure => new TrClosure(
+						ins.A,
+						CompileProto(proto.protos[ins.Bx])
+					),
+					InstructionEnum.Call => new TrCall(ins.A, ins.B, ins.C),
+					InstructionEnum.VarArgPrep => new TrNOP(),
+					InstructionEnum.Return => new TrReturn(ins.A, ins.B, ins.C, ins.K)
 				};
 			}
 		}

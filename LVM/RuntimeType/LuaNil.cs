@@ -1,5 +1,8 @@
-﻿namespace LVM.RuntimeType
+﻿using System.Diagnostics;
+
+namespace LVM.RuntimeType
 {
+	[DebuggerDisplay("nil")]
 	public struct LuaNil() : IRuntimeValue
 	{
 		public readonly LuaType TypeName => LuaType.Nil;

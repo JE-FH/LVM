@@ -1,12 +1,17 @@
 ﻿using LVM.Utils;
+using System.Collections.Generic;
+using System.Collections;
 using System.ComponentModel.Design;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 
 namespace LVM.RuntimeType
 {
+	[DebuggerTypeProxy(typeof(LuaTableDebugView))]
 	public class LuaTable : IRuntimeValue
 	{
-		struct Slot
+		[DebuggerDisplay("{key} = {value}")]
+		internal struct Slot
 		{
 			public int next;
 			public uint hashCode;
@@ -115,6 +120,11 @@ namespace LVM.RuntimeType
 			_slots = [];
 		}
 
+		public IRuntimeValue this[IRuntimeValue value]
+		{
+			get => GetValue(value);
+		}
+
 		public IRuntimeValue GetValue(IRuntimeValue index)
 		{
 			var (found, slotIndex) = GetSlotIndexOrPreviousSlot(index);
@@ -164,5 +174,25 @@ namespace LVM.RuntimeType
 			ReferenceEquals(this, other);
 
 		public uint LuaHash => unchecked((uint)RuntimeHelpers.GetHashCode(this));
+		internal class LuaTableDebugView
+		{
+			private LuaTable table;
+			public const string TestString = "This should appear in the debug window.";
+			public LuaTableDebugView(LuaTable table)
+			{
+				this.table = table;
+			}
+
+			[DebuggerBrowsable(DebuggerBrowsableState.RootHidden)]
+			public Slot[] slots
+			{
+				get
+				{
+					return table._slots
+						.Take(table._nextSlotIndex)
+						.ToArray();
+				}
+			}
+		}
 	}
 }

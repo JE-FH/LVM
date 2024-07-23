@@ -1,5 +1,9 @@
-﻿namespace LVM.RuntimeType
+﻿using System.Diagnostics;
+using System.Text;
+
+namespace LVM.RuntimeType
 {
+	[DebuggerDisplay("{Decoded}")]
 	public class LuaString(byte[] _value) : IRuntimeValue
 	{
 		public byte[] value = _value;
@@ -11,5 +15,12 @@
 		public bool LuaEqual(IRuntimeValue other) =>
 			other is LuaString otherString
 				&& Enumerable.SequenceEqual(value, otherString.value);
+
+		public static LuaString From(string v)
+		{
+			return new LuaString(Encoding.UTF8.GetBytes(v));
+		}
+
+		internal string Decoded => Encoding.UTF8.GetString(value);
 	}
 }
