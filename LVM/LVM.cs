@@ -89,7 +89,7 @@ namespace LVM
 
 		public int Capacity => stack.Count;
 
-		public int Top => _end - 1;
+		public int StackLast => _end - 1;
 	}
 
 	public class CallInfo(LuaState _luaState, LuaClosure _closure, int _resultStartIndex, int _resultCount)
@@ -156,7 +156,7 @@ namespace LVM
 
 		private CallInfo PushCallInfo(LuaClosure closure, int closureIndex, int resultStackStart, int resultCount)
 		{
-			var stackBase = stack.Top;
+			var stackBase = stack.StackLast;
 			stack.PushNils(closure.proto.maxStackSize);
 
 			return new CallInfo(this, closure, resultStackStart, resultCount)
@@ -175,7 +175,7 @@ namespace LVM
 			);
 
 			stack.Push(closure);
-			Call(stack.Top);
+			Call(stack.StackLast);
 		}
 
 		private void Call(int index)
