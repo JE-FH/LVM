@@ -1,6 +1,4 @@
 ﻿using LVM.RuntimeType;
-using System.Runtime.CompilerServices;
-using System.Text;
 
 namespace LVM
 {
@@ -66,6 +64,11 @@ namespace LVM
 		{
 			stack[_end - 1].value = new LuaNil();
 			_end -= 1;
+		}
+
+		public void ShrinkTo(uint count)
+		{
+			PopMany((uint) stack.Count - count);
 		}
 
 		public void PushNils(uint count)

@@ -1,12 +1,9 @@
-﻿using System.Reflection.Metadata;
-using System.Runtime.InteropServices.Marshalling;
-using System.Security.Cryptography;
+﻿using LVM.RuntimeType;
 using System.Text;
-using LVM.RuntimeType;
 
 namespace LVM
 {
-    public class ExtraArgInstructionReachedException(int _pc) : Exception("Extra arg instruction was reached")
+	public class ExtraArgInstructionReachedException(int _pc) : Exception("Extra arg instruction was reached")
 	{
 		public int pc = _pc;
 	}
@@ -727,12 +724,29 @@ namespace LVM
 		public void Execute(CallInfo ci, LuaState luaState)
 		{
 			var closure = ci.GetRegister<LuaClosure>(A);
+			var stackBase = luaState.stack.StackLast + 1;
+
+			if (B > 0)
+			{
+				for (var i = 0; i < closure.proto.numParams; i++)
+				{
+					if (A + 1 + i < A + B - 1)
+					{
+						luaState.stack.Push(ci[A + 1]);
+					}
+					else
+					{
+						luaState.stack.PushNils(1);
+					}
+				}
+			}
 			var topCi = new CallInfo(luaState, closure, ci.stackBase + A, C - 2)
 			{
-				stackBase = ci.stackBase + A + 1
+				stackBase = stackBase
 			};
-			luaState.callStack.Add(topCi);
+			//Maybe subtract what has already been pushed through arguments
 			luaState.stack.PushNils(closure.proto.maxStackSize);
+			luaState.callStack.Add(topCi);
 			ci.pc += 1;
 		}
 	}
@@ -742,6 +756,7 @@ namespace LVM
 		public void Execute(CallInfo ci, LuaState luaState)
 		{
 			luaState.callStack.RemoveAt(luaState.callStack.Count - 1);
+			luaState.stack.ShrinkTo((uint)ci.stackBase - 1);
 		}
 	}
 
@@ -750,6 +765,7 @@ namespace LVM
 		public void Execute(CallInfo ci, LuaState luaState)
 		{
 			luaState.callStack.RemoveAt(luaState.callStack.Count - 1);
+			luaState.stack.ShrinkTo((uint)ci.stackBase - 1);
 		}
 	}
 
@@ -757,7 +773,16 @@ namespace LVM
 	{
 		public void Execute(CallInfo ci, LuaState luaState)
 		{
+			if (ci.ResultCount > 0)
+			{
+				luaState.stack[ci.ResultStartIndex] = ci[A];
+				for (var i = 1; i < ci.ResultCount; i++)
+				{
+					luaState.stack[ci.ResultStartIndex + i] = new LuaNil();
+				}
+			}
 			luaState.callStack.RemoveAt(luaState.callStack.Count - 1);
+			luaState.stack.ShrinkTo((uint)ci.stackBase - 1);
 		}
 	}
 
