@@ -117,7 +117,7 @@ namespace LVM
 	{
 		public void Execute(CallInfo ci, LuaState luaState)
 		{
-			ci[A] = ci.closure.upValues[B].value;
+			ci[A] = ci.Closure.upValues[B].value;
 		}
 	}
 
@@ -125,7 +125,7 @@ namespace LVM
 	{
 		public void Execute(CallInfo ci, LuaState luaState)
 		{
-			ci.closure.upValues[A].value = ci[B];
+			ci.Closure.upValues[A].value = ci[B];
 		}
 	}
 
@@ -134,7 +134,7 @@ namespace LVM
 	{
 		public void Execute(CallInfo ci, LuaState luaState)
 		{
-			if (ci.closure.upValues[B].value is LuaTable realValue)
+			if (ci.Closure.upValues[B].value is LuaTable realValue)
 			{
 				ci[A] = realValue.GetValue(KC);
 				ci.pc += 1;
@@ -184,7 +184,7 @@ namespace LVM
 	{
 		public void Execute(CallInfo ci, LuaState luaState)
 		{
-			if (ci.closure.upValues[A].value is LuaTable realValue)
+			if (ci.Closure.upValues[A].value is LuaTable realValue)
 			{
 				realValue.SetValue(KB, C);
 				ci.pc += 1;
@@ -201,7 +201,7 @@ namespace LVM
 	{
 		public void Execute(CallInfo ci, LuaState luaState)
 		{
-			if (ci.closure.upValues[A].value is LuaTable realValue)
+			if (ci.Closure.upValues[A].value is LuaTable realValue)
 			{
 				realValue.SetValue(KB, ci[C]);
 				ci.pc += 1;
@@ -715,7 +715,7 @@ namespace LVM
 				.Select((upValue) => 
 					upValue.inStack
 						? ci.GetStackReference(upValue.index)
-						: ci.closure.upValues[upValue.index]
+						: ci.Closure.upValues[upValue.index]
 				);
 			ci[A] = new LuaClosure(KProtoBx, upValues.ToArray());
 			ci.pc += 1;
@@ -727,16 +727,33 @@ namespace LVM
 		public void Execute(CallInfo ci, LuaState luaState)
 		{
 			var closure = ci.GetRegister<LuaClosure>(A);
-			var topCi = new CallInfo(luaState, closure)
+			var topCi = new CallInfo(luaState, closure, ci.stackBase + A, C - 2)
 			{
 				stackBase = ci.stackBase + A + 1
 			};
 			luaState.callStack.Add(topCi);
+			luaState.stack.PushNils(closure.proto.maxStackSize);
 			ci.pc += 1;
 		}
 	}
 
 	public class TrReturn(byte A, byte B, byte C, bool k) : IStateTransition
+	{
+		public void Execute(CallInfo ci, LuaState luaState)
+		{
+			luaState.callStack.RemoveAt(luaState.callStack.Count - 1);
+		}
+	}
+
+	public class TrReturn0() : IStateTransition
+	{
+		public void Execute(CallInfo ci, LuaState luaState)
+		{
+			luaState.callStack.RemoveAt(luaState.callStack.Count - 1);
+		}
+	}
+
+	public class TrReturn1(byte A) : IStateTransition
 	{
 		public void Execute(CallInfo ci, LuaState luaState)
 		{

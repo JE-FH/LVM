@@ -44,6 +44,7 @@ namespace LVM
 	public class LuaStack()
 	{
 		public List<LuaValueReference> stack = new();
+		private int _end = 0;
 		public IRuntimeValue this[int index]
 		{
 			get { return stack[index].value; }
@@ -58,11 +59,13 @@ namespace LVM
 		public void Push(IRuntimeValue val)
 		{
 			stack.Add(new LuaValueReference(val));
+			_end += 1;
 		}
 
 		public void Pop()
 		{
-			stack.RemoveAt(stack.Count - 1);
+			stack[_end - 1].value = new LuaNil();
+			_end -= 1;
 		}
 
 		public void PushNils(uint count)
@@ -73,24 +76,36 @@ namespace LVM
 			}
 		}
 
-		public int Length => stack.Count;
+		public void PopMany(uint count)
+		{
+			for (uint i = 0; i < count; i++)
+			{
+				Pop();
+			}
+		}
+
+		public int Capacity => stack.Count;
+
+		public int Top => _end - 1;
 	}
 
-	public class CallInfo(LuaState _luaState, LuaClosure _closure)
+	public class CallInfo(LuaState _luaState, LuaClosure _closure, int _resultStartIndex, int _resultCount)
 	{
 		public int pc = 0;
-		public LuaClosure closure = _closure;
+		public LuaClosure Closure => _closure;
 		public int stackBase = 0;
-		public LuaState luaState = _luaState;
+		public LuaState LuaState => _luaState;
+		public int ResultStartIndex => _resultStartIndex;
+		public int ResultCount => _resultCount;
 		public IRuntimeValue this[int relativeIndex]
 		{
-			get => luaState.stack[stackBase + relativeIndex];
-			set => luaState.stack[stackBase + relativeIndex] = value;
+			get => LuaState.stack[stackBase + relativeIndex];
+			set => LuaState.stack[stackBase + relativeIndex] = value;
 		}
 
 		public LuaValueReference GetStackReference(int relativeIndex)
 		{
-			return luaState.stack.GetReference(stackBase + relativeIndex);
+			return LuaState.stack.GetReference(stackBase + relativeIndex);
 		}
 
 		public T GetRegister<T>(int relativeIndex) where T : IRuntimeValue
@@ -101,7 +116,7 @@ namespace LVM
 				return realValue;
 			} else
 			{
-				throw new WrongRegisterTypeException(stackBase + relativeIndex, luaState.stack[stackBase + relativeIndex]);
+				throw new WrongRegisterTypeException(stackBase + relativeIndex, LuaState.stack[stackBase + relativeIndex]);
 			}
 		}
 
@@ -136,6 +151,17 @@ namespace LVM
 			envTable = new LuaTable();
 		}
 
+		private CallInfo PushCallInfo(LuaClosure closure, int closureIndex, int resultStackStart, int resultCount)
+		{
+			var stackBase = stack.Top;
+			stack.PushNils(closure.proto.maxStackSize);
+
+			return new CallInfo(this, closure, resultStackStart, resultCount)
+			{
+				stackBase = stackBase
+			};
+		}
+
 		public void RunFunction(LuaCFile luaCFile)
 		{
 			var closure = new LuaClosure(
@@ -146,14 +172,13 @@ namespace LVM
 			);
 
 			stack.Push(closure);
-			Call(stack.Length - 1);
+			Call(stack.Top);
 		}
 
 		private void Call(int index)
 		{
 			var closure = (LuaClosure)stack[index];
-			stack.PushNils(closure.proto.maxStackSize);
-			var callInfo = new CallInfo(this, closure);
+			var callInfo = PushCallInfo(closure, index, 0);
 			callStack.Add(callInfo);
 			while (Step()) { }
 		}
@@ -167,7 +192,7 @@ namespace LVM
 
 			var callInfo = callStack[callStack.Count - 1];
 
-			var nextTransition = callInfo.closure.proto.transitions[callInfo.pc];
+			var nextTransition = callInfo.Closure.proto.transitions[callInfo.pc];
 
 			nextTransition.Execute(callInfo, this);
 

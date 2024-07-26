@@ -12,7 +12,7 @@ namespace LVMTest
 	public class TransitionTest(TestFileFixture testFiles) : IClassFixture<TestFileFixture>
 	{
 		[Fact]
-		void AssignmentTest()
+		public void AssignmentTest()
 		{
 			using Stream fileStream = testFiles.GetTestFile("assignment.out");
 
