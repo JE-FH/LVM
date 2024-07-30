@@ -27,5 +27,22 @@ namespace LVMTest
 				new LuaInteger(1)
 			);
 		}
+
+		[Fact]
+		public void testbin()
+		{
+			using Stream fileStream = testFiles.GetTestFile("test.bin");
+
+			var parser = new LuaCReader();
+			var parsed = parser.ParseLuaCFile(fileStream);
+
+			var state = new LuaState();
+			state.RunFunction(parsed);
+
+			Assert.Equal(
+				state.envTable.GetValue(LuaString.From("d")),
+				new LuaInteger(-1)
+			);
+		}
 	}
 }

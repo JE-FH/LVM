@@ -1,4 +1,5 @@
 ﻿using LVM.RuntimeType;
+using System.Security.Authentication;
 using System.Text;
 
 namespace LVM
@@ -723,30 +724,53 @@ namespace LVM
 	{
 		public void Execute(CallInfo ci, LuaState luaState)
 		{
+			//get the closure we are calling
 			var closure = ci.GetRegister<LuaClosure>(A);
-			var stackBase = luaState.stack.StackLast + 1;
-
-			if (B > 0)
+			//set stack base to closure index + 1 eg. ci.stackBase + A + 1
+			var stackBase = ci.stackBase + A + 1;
+			//determine amount of arguments supplied, eg. B - 2
+			var suppliedArgs = B - 1;
+			if (suppliedArgs == -1) {
+				//All arguments till the last stack item are supplied
+				suppliedArgs = luaState.stack.StackLast - stackBase - 1;
+			}
+			//replace missing arguments by nil
+			for (var i = stackBase + suppliedArgs; i < stackBase + closure.proto.numParams; i++)
 			{
-				for (var i = 0; i < closure.proto.numParams; i++)
+				if (i > luaState.stack.StackLast)
 				{
-					if (A + 1 + i < A + B - 1)
-					{
-						luaState.stack.Push(ci[A + 1]);
-					}
-					else
-					{
-						luaState.stack.PushNils(1);
-					}
+					luaState.stack.PushNils(1);
+				}
+				else
+				{
+					luaState.stack[i] = new LuaNil();
 				}
 			}
-			var topCi = new CallInfo(luaState, closure, ci.stackBase + A, C - 2)
+
+			var extraArgCount = suppliedArgs - closure.proto.numParams;
+
+			IRuntimeValue[] extraArgs;
+
+			if (extraArgCount > 0)
+			{
+				extraArgs = Enumerable.Range(closure.proto.numParams, extraArgCount)
+					.Select(i => ci[i])
+					.ToArray();
+			}
+			else
+			{
+				extraArgs = [];
+			}
+
+			CallInfo newCi = new CallInfo(luaState, closure, extraArgs)
 			{
 				stackBase = stackBase
 			};
-			//Maybe subtract what has already been pushed through arguments
-			luaState.stack.PushNils(closure.proto.maxStackSize);
-			luaState.callStack.Add(topCi);
+
+			luaState.callStack.Add(newCi);
+
+			luaState.stack.ResizeTo((uint)(stackBase + closure.proto.maxStackSize));
+
 			ci.pc += 1;
 		}
 	}
@@ -756,7 +780,7 @@ namespace LVM
 		public void Execute(CallInfo ci, LuaState luaState)
 		{
 			luaState.callStack.RemoveAt(luaState.callStack.Count - 1);
-			luaState.stack.ShrinkTo((uint)ci.stackBase - 1);
+			luaState.stack.ResizeTo((uint)ci.stackBase - 1);
 		}
 	}
 
@@ -765,7 +789,13 @@ namespace LVM
 		public void Execute(CallInfo ci, LuaState luaState)
 		{
 			luaState.callStack.RemoveAt(luaState.callStack.Count - 1);
-			luaState.stack.ShrinkTo((uint)ci.stackBase - 1);
+			if (luaState.callStack.Count == 0)
+			{
+				luaState.stack.ResizeTo((uint)0);
+				return;
+			}
+			var newCi = luaState.callStack.Last();
+			luaState.stack.ResizeTo((uint)(newCi.stackBase + newCi.Closure.proto.maxStackSize));
 		}
 	}
 
@@ -773,16 +803,15 @@ namespace LVM
 	{
 		public void Execute(CallInfo ci, LuaState luaState)
 		{
-			if (ci.ResultCount > 0)
-			{
-				luaState.stack[ci.ResultStartIndex] = ci[A];
-				for (var i = 1; i < ci.ResultCount; i++)
-				{
-					luaState.stack[ci.ResultStartIndex + i] = new LuaNil();
-				}
-			}
+			luaState.stack[ci.stackBase - 1] = ci[A];
 			luaState.callStack.RemoveAt(luaState.callStack.Count - 1);
-			luaState.stack.ShrinkTo((uint)ci.stackBase - 1);
+			if (luaState.callStack.Count == 0)
+			{
+				luaState.stack.ResizeTo((uint)1);
+				return;
+			}
+			var newCi = luaState.callStack.Last();
+			luaState.stack.ResizeTo((uint)(newCi.stackBase + newCi.Closure.proto.maxStackSize));
 		}
 	}
 

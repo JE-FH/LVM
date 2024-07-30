@@ -1,4 +1,5 @@
 ﻿using LVM.RuntimeType;
+using System.Net.Http.Headers;
 
 namespace LVM
 {
@@ -66,9 +67,16 @@ namespace LVM
 			_end -= 1;
 		}
 
-		public void ShrinkTo(uint count)
+		public void ResizeTo(uint count)
 		{
-			PopMany((uint) stack.Count - count);
+			if (count > StackLast)
+			{
+				PushNils((uint) (count - _end));
+			}
+			else if (count <  StackLast)
+			{
+				PopMany((uint) (_end - count));
+			}
 		}
 
 		public void PushNils(uint count)
@@ -92,14 +100,13 @@ namespace LVM
 		public int StackLast => _end - 1;
 	}
 
-	public class CallInfo(LuaState _luaState, LuaClosure _closure, int _resultStartIndex, int _resultCount)
+	public class CallInfo(LuaState _luaState, LuaClosure _closure, IRuntimeValue[] _extraArgs)
 	{
 		public int pc = 0;
 		public LuaClosure Closure => _closure;
 		public int stackBase = 0;
 		public LuaState LuaState => _luaState;
-		public int ResultStartIndex => _resultStartIndex;
-		public int ResultCount => _resultCount;
+		public IRuntimeValue[] ExtraArgs => _extraArgs;
 		public IRuntimeValue this[int relativeIndex]
 		{
 			get => LuaState.stack[stackBase + relativeIndex];
@@ -154,17 +161,6 @@ namespace LVM
 			envTable = new LuaTable();
 		}
 
-		private CallInfo PushCallInfo(LuaClosure closure, int closureIndex, int resultStackStart, int resultCount)
-		{
-			var stackBase = stack.StackLast;
-			stack.PushNils(closure.proto.maxStackSize);
-
-			return new CallInfo(this, closure, resultStackStart, resultCount)
-			{
-				stackBase = stackBase
-			};
-		}
-
 		public void RunFunction(LuaCFile luaCFile)
 		{
 			var closure = new LuaClosure(
@@ -181,8 +177,10 @@ namespace LVM
 		private void Call(int index)
 		{
 			var closure = (LuaClosure)stack[index];
-			var callInfo = PushCallInfo(closure, index, 0);
+			var callInfo = new CallInfo(this, closure, []);
+			callInfo.stackBase = 1;
 			callStack.Add(callInfo);
+			stack.ResizeTo((uint) (callInfo.stackBase + closure.proto.maxStackSize));
 			while (Step()) { }
 		}
 
@@ -420,7 +418,9 @@ namespace LVM
 					),
 					InstructionEnum.Call => new TrCall(ins.A, ins.B, ins.C),
 					InstructionEnum.VarArgPrep => new TrNOP(),
-					InstructionEnum.Return => new TrReturn(ins.A, ins.B, ins.C, ins.K)
+					InstructionEnum.Return => new TrReturn(ins.A, ins.B, ins.C, ins.K),
+					InstructionEnum.Return0 => new TrReturn0(),
+					InstructionEnum.Return1 => new TrReturn1(ins.A)
 				};
 			}
 		}
