@@ -1,5 +1,4 @@
 ﻿using LVM.RuntimeType;
-using System.Security.Authentication;
 using System.Text;
 
 namespace LVM
@@ -759,7 +758,7 @@ namespace LVM
 			}
 			else
 			{
-				extraArgs = [];
+				extraArgs = Array.Empty<IRuntimeValue>();
 			}
 
 			CallInfo newCi = new CallInfo(luaState, closure, extraArgs)
@@ -784,7 +783,7 @@ namespace LVM
 		}
 	}
 
-	public class TrReturn0() : IStateTransition
+	public class TrReturn0 : IStateTransition
 	{
 		public void Execute(CallInfo ci, LuaState luaState)
 		{
