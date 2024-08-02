@@ -3,6 +3,16 @@ T = {
 }
 T.TokenPattern.__index = T.TokenPattern;
 
+local G = {
+    ConcatParticle = {},
+    TerminalParticle = {},
+    Rule = {}
+}
+
+G.ConcatParticle.__index = G.ConcatParticle;
+G.TerminalParticle.__index = G.TerminalParticle;
+G.Rule = {};
+
 function T.R(from, to)
     assert(type(from) == "string" and #from == 1, "from must be a single character")
     assert(type(to) == "string" and #to == 1, "from must be a single character")
@@ -56,61 +66,69 @@ function T.TokenPattern:__add(rhs)
     return self;
 end
 
-local G = {
-    Rule = {}
-}
+function G.TerminalParticle:new(token)
+    local o = {
+        token = token
+    }
+    setmetatable(o, self);
+    return o;
+end
 
-G.Rule.__index = G.Rule;
+function G.NonTerminalParticle:new(first, second)
+    local o = {
+        first = first,
+        second = second
+    }
+    setmetatable(o, self);
+    return o;
+end
+
+function G.Rule:new(variants)
+    local o = {
+        variants = variants
+    };
+    setmetatable(o, self);
+    return o;
+end
 
 function G.R(tokenOrNil)
-    assert(tokenOrNil == nil or getmetatable(tokenOrNil) == T.TokenPattern, "tokenOrNil must be a TokenPattern or nil")
-    local o = {
-        variants = {}
-    };
-    setmetatable(o, G.Rule);
+    local variants = {};
     if (tokenOrNil ~= nil) then
-        table.insert(o.variants, tokenOrNil);
+        table.insert(variants, tokenOrNil);
     end
     return o;
 end
 
 function G.Rule:__add(rhs)
-    assert(getmetatable(rhs) == G.Rule, "rhs must be a Rule");
-    for k, v in pairs(rhs.variants) do
-        table.insert(self.variants, v);
-    end
+    table.insert(self.variants, rhs);
     return self;
 end
 
 function G.Rule:__mul(rhs)
-    assert(getmetatable(rhs == g.Rule, "rhs must be a Rule"));
-    local oldVariants = self.variants;
-    self.variants = {};
-    for _, rhsv in pairs(rhs.variants) do
-        for _, lhsv in pairs(lhs.variants) do
-            local newVariant = {};
-            for _, v in pairs(lhsv) do
-                table.insert(newVariant, v);
-            end
-            for _, v in pairs(rhsv) do
-                table.insert(newVariant, v);
-            end
-            table.insert(self.variants, newVariant)
-        end
-    end
+
+    return self;
 end
 
-function dump(o)
+function dump(o, seenObjects)
+    seenObjects = seenObjects or {};
+    if (seenObjects[o]) then
+        return 'selfref';
+    end
+    seenObjects[o] = true;
     if type(o) == 'table' then
-       local s = '{ '
-       for k,v in pairs(o) do
-          if type(k) ~= 'number' then k = '"'..k..'"' end
-          s = s .. '['..k..'] = ' .. dump(v) .. ','
+        local s = '{ '
+        for i = 1,#o do
+            s = s .. dump(o[i], seenObjects) .. ',';
+        end
+        for k,v in pairs(o) do
+            if type(k) ~= 'number' then
+                s = s .. k .. ' = ' .. dump(v, seenObjects) .. ','
+            end
        end
        return s .. '} '
     else
         print(o)
-       return tostring(o)
+        return tostring(o)
     end
  end
  
@@ -122,3 +140,5 @@ local Op = T.L("+") + T.L("-") + T.L("*") + T.L("/");
 
 local exp = G.R()
 exp = exp + G.R(Numeral) + (exp * G.R(Op) * exp);
+
+print(dump(exp));
