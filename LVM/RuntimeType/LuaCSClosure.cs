@@ -1,13 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Runtime.CompilerServices;
 
 namespace LVM.RuntimeType
 {
-	public class LuaCSClosure<T> : IRuntimeValue 
+	public class LuaCsClosure(object handler) : ILuaClosure 
 	{
 		public LuaType TypeName => LuaType.Closure;
 
@@ -17,5 +12,12 @@ namespace LVM.RuntimeType
 		{
 			return ReferenceEquals(this, other);
 		}
+
+		public IRuntimeValue[] Call(LuaState state, IRuntimeValue[] args)
+		{
+			throw new NotImplementedException();
+		}
+
+		public int ParamCount => 0;
 	}
 }

@@ -2,7 +2,7 @@
 
 namespace LVM.RuntimeType
 {
-	public class LuaClosure : IRuntimeValue
+	public class LuaClosure : ILuaClosure
 	{
 		public LuaValueReference[] upValues;
 		public CompiledProto proto;
@@ -23,5 +23,6 @@ namespace LVM.RuntimeType
 			ReferenceEquals(this, other);
 
 		public uint LuaHash => unchecked((uint)RuntimeHelpers.GetHashCode(this));
+		public int ParamCount => proto.numParams;
 	}
 }

@@ -24,12 +24,12 @@ namespace LVM
 
 	public interface IStateTransition
 	{
-		void Execute(CallInfo ci, LuaState luaState);
+		void Execute(LuaCallInfo ci, LuaState luaState);
 	}
 
 	public class TrMove(byte A, byte B) : IStateTransition
 	{
-		public void Execute(CallInfo ci, LuaState luaState)
+		public void Execute(LuaCallInfo ci, LuaState luaState)
 		{
 			ci[A] = ci[B];
 			ci.pc++;
@@ -38,7 +38,7 @@ namespace LVM
 
 	public class TrLoadI(byte A, int sBx) : IStateTransition
 	{
-		public void Execute(CallInfo ci, LuaState luaState)
+		public void Execute(LuaCallInfo ci, LuaState luaState)
 		{
 			ci[A] = new LuaInteger(sBx);
 			ci.pc++;
@@ -47,7 +47,7 @@ namespace LVM
 
 	public class TrLoadF(byte A, int sBx) : IStateTransition
 	{
-		public void Execute(CallInfo ci, LuaState luaState)
+		public void Execute(LuaCallInfo ci, LuaState luaState)
 		{
 			ci[A] = new LuaNumber(sBx);
 			ci.pc++;
@@ -56,7 +56,7 @@ namespace LVM
 
 	public class TrLoadK(byte A, IRuntimeValue constant) : IStateTransition
 	{
-		public void Execute(CallInfo ci, LuaState luaState)
+		public void Execute(LuaCallInfo ci, LuaState luaState)
 		{
 			ci[A] = constant;
 			ci.pc++;
@@ -65,7 +65,7 @@ namespace LVM
 
 	public class TrLoadKx(byte A, IRuntimeValue constant) : IStateTransition
 	{
-		public void Execute(CallInfo ci, LuaState luaState)
+		public void Execute(LuaCallInfo ci, LuaState luaState)
 		{
 			ci[A] = constant;
 			ci.pc += 2;
@@ -74,7 +74,7 @@ namespace LVM
 
 	public class TrLoadFalse(byte A) : IStateTransition
 	{
-		public void Execute(CallInfo ci, LuaState luaState)
+		public void Execute(LuaCallInfo ci, LuaState luaState)
 		{
 			ci[A] = new LuaBool(false);
 			ci.pc++;
@@ -83,7 +83,7 @@ namespace LVM
 
 	public class TrLFalseSkip(byte A) : IStateTransition
 	{
-		public void Execute(CallInfo ci, LuaState luaState)
+		public void Execute(LuaCallInfo ci, LuaState luaState)
 		{
 			ci[A] = new LuaBool(false);
 			ci.pc += 2;
@@ -92,7 +92,7 @@ namespace LVM
 
 	public class TrLoadTrue(byte A) : IStateTransition
 	{
-		public void Execute(CallInfo ci, LuaState luaState)
+		public void Execute(LuaCallInfo ci, LuaState luaState)
 		{
 			ci[A] = new LuaBool(true);
 			ci.pc++;
@@ -101,7 +101,7 @@ namespace LVM
 
 	public class TrLoadNil(byte A, byte B) : IStateTransition
 	{
-		public void Execute(CallInfo ci, LuaState luaState)
+		public void Execute(LuaCallInfo ci, LuaState luaState)
 		{
 			for (int i = A; i < A + B; ++i) {
 				ci[i] = new LuaNil();
@@ -112,7 +112,7 @@ namespace LVM
 
 	public class TrGetUpVal(byte A, byte B) : IStateTransition
 	{
-		public void Execute(CallInfo ci, LuaState luaState)
+		public void Execute(LuaCallInfo ci, LuaState luaState)
 		{
 			ci[A] = ci.Closure.upValues[B].value;
 		}
@@ -120,7 +120,7 @@ namespace LVM
 
 	public class TrSetUpVal(byte A, byte B) : IStateTransition
 	{
-		public void Execute(CallInfo ci, LuaState luaState)
+		public void Execute(LuaCallInfo ci, LuaState luaState)
 		{
 			ci.Closure.upValues[A].value = ci[B];
 		}
@@ -129,7 +129,7 @@ namespace LVM
 	//TODO: Call metamethod
 	public class TrGetTabUp(byte A, byte B, byte[] KC) : IStateTransition
 	{
-		public void Execute(CallInfo ci, LuaState luaState)
+		public void Execute(LuaCallInfo ci, LuaState luaState)
 		{
 			if (ci.Closure.upValues[B].value is LuaTable realValue)
 			{
@@ -146,7 +146,7 @@ namespace LVM
 	//TODO: Call metamethod
 	public class TrGetTable(byte A, byte B, byte C) : IStateTransition
 	{
-		public void Execute(CallInfo ci, LuaState luaState)
+		public void Execute(LuaCallInfo ci, LuaState luaState)
 		{
 			LuaTable table = ci.GetRegister<LuaTable>(B);
 			ci[A] = table.GetValue(ci[C]);
@@ -157,7 +157,7 @@ namespace LVM
 	//TODO: Call metamethod
 	public class TrGetI(byte A, byte B, byte C) : IStateTransition
 	{
-		public void Execute(CallInfo ci, LuaState luaState)
+		public void Execute(LuaCallInfo ci, LuaState luaState)
 		{
 			LuaTable table = ci.GetRegister<LuaTable>(B);
 			ci[A] = table.GetValue(C);
@@ -168,7 +168,7 @@ namespace LVM
 	//The constant can only be a short string to conform with the native lua VM
 	//TODO: Call metamethod
 	public class TrGetField(byte A, byte B, byte[] KC) : IStateTransition {
-		public void Execute(CallInfo ci, LuaState luaState)
+		public void Execute(LuaCallInfo ci, LuaState luaState)
 		{
 			LuaTable table = ci.GetRegister<LuaTable>(B);
 			ci[A] = table.GetValue(KC);
@@ -179,7 +179,7 @@ namespace LVM
 	//TODO: Call metamethod
 	public class TrSetTabUpK(byte A, byte[] KB, IRuntimeValue C) : IStateTransition
 	{
-		public void Execute(CallInfo ci, LuaState luaState)
+		public void Execute(LuaCallInfo ci, LuaState luaState)
 		{
 			if (ci.Closure.upValues[A].value is LuaTable realValue)
 			{
@@ -196,7 +196,7 @@ namespace LVM
 	//TODO: Call metamethod
 	public class TrSetTabUpR(byte A, byte[] KB, byte C) : IStateTransition
 	{
-		public void Execute(CallInfo ci, LuaState luaState)
+		public void Execute(LuaCallInfo ci, LuaState luaState)
 		{
 			if (ci.Closure.upValues[A].value is LuaTable realValue)
 			{
@@ -213,7 +213,7 @@ namespace LVM
 	//TODO: Call metamethod
 	public class TrSetTableK(byte A, byte B, IRuntimeValue KC) : IStateTransition
 	{
-		public void Execute(CallInfo ci, LuaState luaState)
+		public void Execute(LuaCallInfo ci, LuaState luaState)
 		{
 			LuaTable table = ci.GetRegister<LuaTable>(A);
 			table.SetValue(ci[B], KC);
@@ -224,7 +224,7 @@ namespace LVM
 	//TODO: Call metamethod
 	public class TrSetTableC(byte A, byte B, byte C) : IStateTransition
 	{
-		public void Execute(CallInfo ci, LuaState luaState)
+		public void Execute(LuaCallInfo ci, LuaState luaState)
 		{
 			LuaTable table = ci.GetRegister<LuaTable>(A);
 			table.SetValue(ci[B], ci[C]);
@@ -235,7 +235,7 @@ namespace LVM
 	//TODO: Call metamethod
 	public class TrSetIK(byte A, byte B, IRuntimeValue KC) : IStateTransition
 	{
-		public void Execute(CallInfo ci, LuaState luaState)
+		public void Execute(LuaCallInfo ci, LuaState luaState)
 		{
 			LuaTable table = ci.GetRegister<LuaTable>(A);
 			table.SetValue(B, KC);
@@ -246,7 +246,7 @@ namespace LVM
 	//TODO: Call metamethod
 	public class TrSetIR(byte A, byte B, byte C) : IStateTransition
 	{
-		public void Execute(CallInfo ci, LuaState luaState)
+		public void Execute(LuaCallInfo ci, LuaState luaState)
 		{
 			LuaTable table = ci.GetRegister<LuaTable>(A);
 			table.SetValue(B, ci[C]);
@@ -258,7 +258,7 @@ namespace LVM
 	//TODO: Call metamethod
 	public class TrSetFieldK(byte A, byte[] KB, IRuntimeValue KC) : IStateTransition
 	{
-		public void Execute(CallInfo ci, LuaState luaState)
+		public void Execute(LuaCallInfo ci, LuaState luaState)
 		{
 			LuaTable table = ci.GetRegister<LuaTable>(A);
 			table.SetValue(KB, KC);
@@ -270,7 +270,7 @@ namespace LVM
 	//TODO: Call metamethod
 	public class TrSetFieldR(byte A, byte[] KB, byte C) : IStateTransition
 	{
-		public void Execute(CallInfo ci, LuaState luaState)
+		public void Execute(LuaCallInfo ci, LuaState luaState)
 		{
 			LuaTable table = ci.GetRegister<LuaTable>(A);
 			table.SetValue(KB, ci[C]);
@@ -281,7 +281,7 @@ namespace LVM
 	//Use all the arguments, including extraarg to construct the table
 	public class TrNewTable(byte A) : IStateTransition
 	{
-		public void Execute(CallInfo ci, LuaState luaState)
+		public void Execute(LuaCallInfo ci, LuaState luaState)
 		{
 			ci[A] = new LuaTable();
 			ci.pc += 2;
@@ -290,7 +290,7 @@ namespace LVM
 
 	public class TrSelfK(byte A, byte B, byte[] KC) : IStateTransition
 	{
-		public void Execute(CallInfo ci, LuaState luaState)
+		public void Execute(LuaCallInfo ci, LuaState luaState)
 		{
 			LuaTable table = ci.GetRegister<LuaTable>(B);
 			ci[A + 1] = table;
@@ -301,7 +301,7 @@ namespace LVM
 
 	public class TrSelfR(byte A, byte B, byte C) : IStateTransition
 	{
-		public void Execute(CallInfo ci, LuaState luaState)
+		public void Execute(LuaCallInfo ci, LuaState luaState)
 		{
 			LuaTable table = ci.GetRegister<LuaTable>(B);
 			LuaString RC = ci.GetRegister<LuaString>(C);
@@ -313,7 +313,7 @@ namespace LVM
 
 	public class TrAddI(byte A, byte B, sbyte sC) : IStateTransition
 	{
-		public void Execute(CallInfo ci, LuaState luaState)
+		public void Execute(LuaCallInfo ci, LuaState luaState)
 		{
 			IRuntimeValue? val = ci[B] switch
 			{
@@ -332,7 +332,7 @@ namespace LVM
 
 	public abstract class TrOpKNum(byte A, byte B) : IStateTransition
 	{
-		public void Execute(CallInfo ci, LuaState luaState)
+		public void Execute(LuaCallInfo ci, LuaState luaState)
 		{
 			double? val = ci.CoerceToNumber(A);
 			if (val != null)
@@ -383,7 +383,7 @@ namespace LVM
 
 	public abstract class TrOpKInt(byte A, byte B) : IStateTransition
 	{
-		public void Execute(CallInfo ci, LuaState luaState)
+		public void Execute(LuaCallInfo ci, LuaState luaState)
 		{
 			long? val = ci.CoerceToInteger(B);
 			if (val != null)
@@ -414,7 +414,7 @@ namespace LVM
 
 	public class TrShrI(byte A, byte B, sbyte sC) : IStateTransition
 	{
-		public void Execute(CallInfo ci, LuaState luaState)
+		public void Execute(LuaCallInfo ci, LuaState luaState)
 		{
 			long? val = ci.CoerceToInteger(B);
 			if (val != null)
@@ -428,7 +428,7 @@ namespace LVM
 
 	public class TrShlI(byte A, byte B, sbyte sC) : IStateTransition
 	{
-		public void Execute(CallInfo ci, LuaState luaState)
+		public void Execute(LuaCallInfo ci, LuaState luaState)
 		{
 			long? val = ci.CoerceToInteger(B);
 			if (val != null)
@@ -442,7 +442,7 @@ namespace LVM
 
 	public abstract class TrBinaryRealOperation(byte A, byte B, byte C) : IStateTransition
 	{
-		public void Execute(CallInfo ci, LuaState luaState)
+		public void Execute(LuaCallInfo ci, LuaState luaState)
 		{
 			IRuntimeValue? val = (ci[B], ci[C]) switch
 			{
@@ -466,7 +466,7 @@ namespace LVM
 
 	public abstract class TrBinaryNumOperation(byte A, byte B, byte C) : IStateTransition
 	{
-		public void Execute(CallInfo ci, LuaState luaState)
+		public void Execute(LuaCallInfo ci, LuaState luaState)
 		{
 			double? a = ci.CoerceToNumber(B);
 			double? b = ci.CoerceToNumber(C);
@@ -483,7 +483,7 @@ namespace LVM
 	//TODO: Inaccurate, should error if both are double https://www.lua.org/source/5.4/ltm.c.html#luaT_trybinTM
 	public abstract class TrBinaryIntOperation(byte A, byte B, byte C) : IStateTransition
 	{
-		public void Execute(CallInfo ci, LuaState luaState)
+		public void Execute(LuaCallInfo ci, LuaState luaState)
 		{
 			long? a = ci.CoerceToInteger(B);
 			long? b = ci.CoerceToInteger(C);
@@ -563,7 +563,7 @@ namespace LVM
 
 	public class TrMetaMethodBinary(byte A, byte B, byte C) : IStateTransition
 	{
-		public void Execute(CallInfo ci, LuaState luaState)
+		public void Execute(LuaCallInfo ci, LuaState luaState)
 		{
 			throw new NotImplementedException();
 		}
@@ -571,7 +571,7 @@ namespace LVM
 
 	public class TrMetaMethodBinaryI(byte A, sbyte B, byte C, bool k) : IStateTransition
 	{
-		public void Execute(CallInfo ci, LuaState luaState)
+		public void Execute(LuaCallInfo ci, LuaState luaState)
 		{
 			throw new NotImplementedException();
 		}
@@ -579,7 +579,7 @@ namespace LVM
 
 	public class TrMetaMethodBinaryK(byte A, byte B, byte C, bool k) : IStateTransition
 	{
-		public void Execute(CallInfo ci, LuaState luaState)
+		public void Execute(LuaCallInfo ci, LuaState luaState)
 		{
 			throw new NotImplementedException();
 		}
@@ -587,7 +587,7 @@ namespace LVM
 
 	public abstract class TrUnaryRealOperation(byte A, byte B) : IStateTransition
 	{
-		public void Execute(CallInfo ci, LuaState luaState)
+		public void Execute(LuaCallInfo ci, LuaState luaState)
 		{
 			IRuntimeValue? val = ci[B] switch
 			{
@@ -609,7 +609,7 @@ namespace LVM
 
 	public abstract class TrUnaryIntOperation(byte A, byte B) : IStateTransition
 	{
-		public void Execute(CallInfo ci, LuaState luaState)
+		public void Execute(LuaCallInfo ci, LuaState luaState)
 		{
 			long? val = ci.CoerceToInteger(B);
 			if (val != null)
@@ -636,7 +636,7 @@ namespace LVM
 
 	public class TrNot(byte A, byte B) : IStateTransition
 	{
-		public void Execute(CallInfo ci, LuaState luaState)
+		public void Execute(LuaCallInfo ci, LuaState luaState)
 		{
 			ci[A] = new LuaBool(ci[B] switch
 			{
@@ -649,7 +649,7 @@ namespace LVM
 
 	public class TrLen(byte A, byte B) : IStateTransition
 	{
-		public void Execute(CallInfo ci, LuaState luaState)
+		public void Execute(LuaCallInfo ci, LuaState luaState)
 		{
 			ci[A] = ci[B] switch
 			{
@@ -664,7 +664,7 @@ namespace LVM
 
 	public class TrConcat(byte A, byte B) : IStateTransition
 	{
-		public void Execute(CallInfo ci, LuaState luaState)
+		public void Execute(LuaCallInfo ci, LuaState luaState)
 		{
 			var convertedByteArray = Enumerable.Range(A, A + B - 1)
 				.SelectMany((i) => ci[i] switch
@@ -682,7 +682,7 @@ namespace LVM
 
 	public class TrClose(byte A) : IStateTransition
 	{
-		public void Execute(CallInfo ci, LuaState luaState)
+		public void Execute(LuaCallInfo ci, LuaState luaState)
 		{
 			throw new NotImplementedException();
 		}
@@ -690,7 +690,7 @@ namespace LVM
 
 	public class TrTBC(byte A) : IStateTransition
 	{
-		public void Execute(CallInfo ci, LuaState luaState)
+		public void Execute(LuaCallInfo ci, LuaState luaState)
 		{
 			throw new NotImplementedException();
 		}
@@ -698,7 +698,7 @@ namespace LVM
 
 	public class TrJmp(int sJ) : IStateTransition
 	{
-		public void Execute(CallInfo ci, LuaState luaState)
+		public void Execute(LuaCallInfo ci, LuaState luaState)
 		{
 			ci.pc += sJ;
 		}
@@ -706,7 +706,7 @@ namespace LVM
 
 	public class TrClosure(byte A, CompiledProto KProtoBx) : IStateTransition
 	{
-		public void Execute(CallInfo ci, LuaState luaState)
+		public void Execute(LuaCallInfo ci, LuaState luaState)
 		{
 			var upValues = KProtoBx.upValues
 				.Select((upValue) => 
@@ -721,10 +721,10 @@ namespace LVM
 
 	public class TrCall(byte A, byte B, byte C) : IStateTransition
 	{
-		public void Execute(CallInfo ci, LuaState luaState)
+		public void Execute(LuaCallInfo ci, LuaState luaState)
 		{
 			//get the closure we are calling
-			var closure = ci.GetRegister<LuaClosure>(A);
+			var closure = ci.GetRegister<ILuaClosure>(A);
 			//set stack base to closure index + 1 eg. ci.stackBase + A + 1
 			var stackBase = ci.stackBase + A + 1;
 			//determine amount of arguments supplied, eg. B - 2
@@ -734,7 +734,7 @@ namespace LVM
 				suppliedArgs = luaState.stack.StackLast - stackBase - 1;
 			}
 			//replace missing arguments by nil
-			for (var i = stackBase + suppliedArgs; i < stackBase + closure.proto.numParams; i++)
+			for (var i = stackBase + suppliedArgs; i < stackBase + closure.ParamCount; i++)
 			{
 				if (i > luaState.stack.StackLast)
 				{
@@ -746,13 +746,13 @@ namespace LVM
 				}
 			}
 
-			var extraArgCount = suppliedArgs - closure.proto.numParams;
+			var extraArgCount = suppliedArgs - closure.ParamCount;
 
 			IRuntimeValue[] extraArgs;
 
 			if (extraArgCount > 0)
 			{
-				extraArgs = Enumerable.Range(closure.proto.numParams, extraArgCount)
+				extraArgs = Enumerable.Range(closure.ParamCount, extraArgCount)
 					.Select(i => ci[i])
 					.ToArray();
 			}
@@ -761,14 +761,23 @@ namespace LVM
 				extraArgs = Array.Empty<IRuntimeValue>();
 			}
 
-			CallInfo newCi = new CallInfo(luaState, closure, extraArgs)
+			if (closure is LuaClosure luaClosure)
 			{
-				stackBase = stackBase
-			};
+				LuaCallInfo newCi = new LuaCallInfo(luaState, luaClosure, extraArgs)
+				{
+					stackBase = stackBase
+				};
 
-			luaState.callStack.Add(newCi);
+				luaState.callStack.Add(newCi);
 
-			luaState.stack.ResizeTo((uint)(stackBase + closure.proto.maxStackSize));
+				luaState.stack.ResizeTo((uint)(stackBase + luaClosure.proto.maxStackSize));
+			}
+			else if (closure is LuaCsClosure csClosure)
+			{
+				
+			}
+
+			
 
 			ci.pc += 1;
 		}
@@ -776,7 +785,7 @@ namespace LVM
 
 	public class TrReturn(byte A, byte B, byte C, bool k) : IStateTransition
 	{
-		public void Execute(CallInfo ci, LuaState luaState)
+		public void Execute(LuaCallInfo ci, LuaState luaState)
 		{
 			luaState.callStack.RemoveAt(luaState.callStack.Count - 1);
 			luaState.stack.ResizeTo((uint)ci.stackBase - 1);
@@ -785,7 +794,7 @@ namespace LVM
 
 	public class TrReturn0 : IStateTransition
 	{
-		public void Execute(CallInfo ci, LuaState luaState)
+		public void Execute(LuaCallInfo ci, LuaState luaState)
 		{
 			luaState.callStack.RemoveAt(luaState.callStack.Count - 1);
 			if (luaState.callStack.Count == 0)
@@ -800,7 +809,7 @@ namespace LVM
 
 	public class TrReturn1(byte A) : IStateTransition
 	{
-		public void Execute(CallInfo ci, LuaState luaState)
+		public void Execute(LuaCallInfo ci, LuaState luaState)
 		{
 			luaState.stack[ci.stackBase - 1] = ci[A];
 			luaState.callStack.RemoveAt(luaState.callStack.Count - 1);
@@ -816,7 +825,7 @@ namespace LVM
 
 	public class TrNOP() : IStateTransition
 	{
-		public void Execute(CallInfo ci, LuaState luaState)
+		public void Execute(LuaCallInfo ci, LuaState luaState)
 		{
 			ci.pc += 1;
 			return;
@@ -825,7 +834,7 @@ namespace LVM
 
 	public class TrExtraArg() : IStateTransition
 	{
-		public void Execute(CallInfo ci, LuaState luaState)
+		public void Execute(LuaCallInfo ci, LuaState luaState)
 		{
 			throw new ExtraArgInstructionReachedException(ci.pc);
 		}

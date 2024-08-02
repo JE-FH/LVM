@@ -1,5 +1,4 @@
 ﻿using LVM.RuntimeType;
-using System.Net.Http.Headers;
 
 namespace LVM
 {
@@ -100,11 +99,19 @@ namespace LVM
 		public int StackLast => _end - 1;
 	}
 
-	public class CallInfo(LuaState _luaState, LuaClosure _closure, IRuntimeValue[] _extraArgs)
+	public interface ICallInfo
+	{
+		public int StackBase { get; }
+		public int MaxStackSize { get; }
+		
+	}
+
+	public class LuaCallInfo(LuaState _luaState, LuaClosure _closure, IRuntimeValue[] _extraArgs, int stackBase) : ICallInfo
 	{
 		public int pc = 0;
 		public LuaClosure Closure => _closure;
-		public int stackBase = 0;
+		public int StackBase => stackBase;
+		public int MaxStackSize => _closure.proto.maxStackSize;
 		public LuaState LuaState => _luaState;
 		public IRuntimeValue[] ExtraArgs => _extraArgs;
 		public IRuntimeValue this[int relativeIndex]
@@ -151,9 +158,17 @@ namespace LVM
 		}
 	}
 
+	public class CsCallInfo(LuaState _luaState, LuaCsClosure _closure, IRuntimeValue[] _extraArgs, int stackBase) : ICallInfo
+	{
+		public LuaCsClosure Closure => _closure;
+		public int StackBase => stackBase;
+		public int MaxStackSize => 0;
+		public LuaState LuaState => _luaState;
+	}
+
 	public class LuaState
 	{
-		public List<CallInfo> callStack = [];
+		public List<ICallInfo> callStack = [];
 		public LuaStack stack = new();
 		public LuaTable envTable = new();
 		public LuaState()
@@ -177,10 +192,9 @@ namespace LVM
 		private void Call(int index)
 		{
 			var closure = (LuaClosure)stack[index];
-			var callInfo = new CallInfo(this, closure, []);
-			callInfo.stackBase = 1;
+			var callInfo = new LuaCallInfo(this, closure, [], 1);
 			callStack.Add(callInfo);
-			stack.ResizeTo((uint) (callInfo.stackBase + closure.proto.maxStackSize));
+			stack.ResizeTo((uint) (callInfo.StackBase + closure.proto.maxStackSize));
 			while (Step()) { }
 		}
 
