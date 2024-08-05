@@ -1,10 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
+﻿using System.Diagnostics;
 using System.Runtime.CompilerServices;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace LSharp.LTypes
 {
@@ -23,6 +18,7 @@ namespace LSharp.LTypes
 		int[] _buckets;
 		Slot[] _slots;
 		private int _nextSlotIndex = 0;
+		private ILValue?[] _metaMethods = Array.Empty<ILValue>();
 
 		private void RecalculateBuckets()
 		{
@@ -163,6 +159,16 @@ namespace LSharp.LTypes
 		public void SetValue(string index, ILValue value)
 		{
 			UpsertValue(new LString(index), value);
+		}
+
+		public ILValue? GetMetaMethod(MetaMethodTag tag)
+		{
+			if (_metaMethods.Length >= (int) tag)
+			{
+				return _metaMethods[(int)tag];
+			}
+
+			return null;
 		}
 
 		public long GetLength()

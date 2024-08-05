@@ -1,7 +1,8 @@
 ﻿using LSharp.LTypes;
 using LSharp.Transitions;
 using LuaByteCode.LuaCConstructs;
-using System.Diagnostics;
+using LuaByteCode.LuaCConstructs.Types;
+using System.Text;
 
 namespace LSharp
 {
@@ -99,6 +100,19 @@ namespace LSharp
 			);
 		}
 
+		private ILValue ConstantToValue(ILuaConstant constant)
+		{
+			return constant switch
+			{
+				BoolConstant c => c.Value ? LBool.TrueInstance : LBool.FalseInstance,
+				FloatConstant f => new LNumber(f.Value),
+				IntegerConstant i => new LInteger(i.Value),
+				NilConstant => LNil.Instance,
+				StringConstant s => new LString(Encoding.UTF8.GetString(s.Data)),
+				_ => throw new NotImplementedException()
+			};
+		}
+
 		private IEnumerable<ITransition> ToTransitions(LuaCPrototype prototype)
 		{
 			var instructions = prototype.Code;
@@ -123,6 +137,13 @@ namespace LSharp
 					InstructionEnum.VarArg => new OVarArg(ins.A, ins.C),
 					InstructionEnum.SetList => new OSetList(ins.A, ins.B, ins.C, ins.K),
 					InstructionEnum.ExtraArg => new OExtraArg(),
+					InstructionEnum.MMBIN => new OMMBin(ins.A, ins.B, (MetaMethodTag) ins.C, instructions[i - 1].A),
+					InstructionEnum.MMBINI => ins.K
+						? new OMMBinIk(ins.A, new LInteger(((IntegerConstant) prototype.Constants[ins.B]).Value), (MetaMethodTag) ins.C, instructions[i - 1].A)
+						: new OMMBinI(ins.A, new LInteger(((IntegerConstant) prototype.Constants[ins.B]).Value), (MetaMethodTag) ins.C, instructions[i - 1].A),
+					InstructionEnum.MMBINK => ins.K
+						? new OMMBinKk(ins.A, ConstantToValue(prototype.Constants[ins.B]), (MetaMethodTag) ins.C, instructions[i - 1].A)
+						: new OMMBinK(ins.A, ConstantToValue(prototype.Constants[ins.B]), (MetaMethodTag) ins.C, instructions[i - 1].A)
 					_ => throw new NotImplementedException()
 				};
 			}

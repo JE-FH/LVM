@@ -1,9 +1,4 @@
 ﻿using LSharp.LTypes;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace LSharp.Helpers
 {
@@ -113,6 +108,17 @@ namespace LSharp.Helpers
 		public static bool Equal(ILValue valueA, ILValue valueB)
 		{
 			return valueA.LEqual(valueB);
+		}
+
+		public static ILValue GetMetaMethod(ILValue aValue, ILValue bValue, MetaMethodTag metaMethodTag)
+		{
+			return (aValue, bValue) switch
+			{
+				(LTable a, LTable b) => a.MetaTable?.GetMetaMethod(metaMethodTag) ?? b.MetaTable?.GetMetaMethod(metaMethodTag) ?? LNil.Instance,
+				(LTable a, _) => a.MetaTable?.GetMetaMethod(metaMethodTag) ?? LNil.Instance,
+				(_, LTable b) => b.MetaTable?.GetMetaMethod(metaMethodTag) ?? LNil.Instance,
+				_ => throw new LException("Invalid arithmetic expression")
+			};
 		}
 	}
 }
