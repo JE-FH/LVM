@@ -161,6 +161,24 @@ namespace LSharp.LTypes
 			UpsertValue(new LString(index), value);
 		}
 
+		public MaybeSetContext HasValueMaybeUpdate(ILValue index)
+		{
+			var (found, slotIndex) = GetSlotIndexOrPreviousSlot(index);
+			if (found)
+			{
+				return new MaybeSetContext(slotIndex);
+			}
+			else
+			{
+				return new MaybeSetContext();
+			}
+		}
+
+		public void UpdateValue(MaybeSetContext ctx, ILValue value)
+		{
+			_slots[ctx.SlotIndex].value = value;
+		}
+
 		public ILValue? GetMetaMethod(MetaMethodTag tag)
 		{
 			if (_metaMethods.Length >= (int) tag)
@@ -204,6 +222,22 @@ namespace LSharp.LTypes
 						.ToArray();
 				}
 			}
+		}
+
+		public readonly struct MaybeSetContext
+		{
+			internal readonly int SlotIndex;
+			public bool HasValue => SlotIndex == -1;
+			internal MaybeSetContext(int _slotIndex)
+			{
+				SlotIndex = _slotIndex;
+			}
+
+			public MaybeSetContext()
+			{
+				SlotIndex = -1;
+			}
+
 		}
 	}
 }

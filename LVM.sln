@@ -3,10 +3,6 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.10.35013.160
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LVM", "LVM\LVM.csproj", "{3BD743F6-E5A8-45BB-AB11-873B97BA1584}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LVMTest", "LVMTest\LVMTest.csproj", "{FAC97F21-8347-475D-B4BE-A8F80BC4B2BE}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{E9B825E1-7C24-4881-9177-381E8BCFB9D3}"
 	ProjectSection(SolutionItems) = preProject
 		.gitignore = .gitignore
@@ -20,7 +16,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestHelper", "TestHelper\Te
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LSharp", "LSharp\LSharp.csproj", "{42F959FF-351B-4C8F-902F-3AB5AF98EB13}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LSharpTest", "LSharpTest\LSharpTest.csproj", "{34A43DC4-1198-4BB2-AF30-52631C87B6B3}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LSharpTest", "LSharpTest\LSharpTest.csproj", "{34A43DC4-1198-4BB2-AF30-52631C87B6B3}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -28,14 +24,6 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{3BD743F6-E5A8-45BB-AB11-873B97BA1584}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{3BD743F6-E5A8-45BB-AB11-873B97BA1584}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{3BD743F6-E5A8-45BB-AB11-873B97BA1584}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{3BD743F6-E5A8-45BB-AB11-873B97BA1584}.Release|Any CPU.Build.0 = Release|Any CPU
-		{FAC97F21-8347-475D-B4BE-A8F80BC4B2BE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{FAC97F21-8347-475D-B4BE-A8F80BC4B2BE}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{FAC97F21-8347-475D-B4BE-A8F80BC4B2BE}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{FAC97F21-8347-475D-B4BE-A8F80BC4B2BE}.Release|Any CPU.Build.0 = Release|Any CPU
 		{3EF5F1EA-E5EE-4685-B5ED-4E2B805674DC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{3EF5F1EA-E5EE-4685-B5ED-4E2B805674DC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3EF5F1EA-E5EE-4685-B5ED-4E2B805674DC}.Release|Any CPU.ActiveCfg = Release|Any CPU

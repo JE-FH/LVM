@@ -4,13 +4,14 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace LSharp.Transitions
+namespace LSharp.Transitions.Stack
 {
-    public class OExtraArg : ITransition
+    public class OMove(byte a, byte b) : ITransition
     {
         public void Transfer(LuaState state, LStackFrame stackFrame)
         {
-            throw new LException("Extra arg instruction was reached");
+            state.Stack[stackFrame.FrameBase + a] = state.Stack[stackFrame.FrameBase + b];
+            stackFrame.PC += 1;
         }
     }
 }

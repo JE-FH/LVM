@@ -10,6 +10,7 @@ namespace LSharp.LTypes
 	[DebuggerDisplay("nil")]
 	public class LNil : ILValue
 	{
+		private LNil() { }
 		public static readonly LNil Instance = new();
 
 		public uint LHash => 8729810;

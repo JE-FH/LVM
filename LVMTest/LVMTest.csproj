@@ -21,10 +21,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\LVM\LVM.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
     <Folder Include="test-files\lib\" />
   </ItemGroup>
 

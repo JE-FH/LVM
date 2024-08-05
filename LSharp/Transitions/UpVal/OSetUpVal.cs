@@ -4,13 +4,13 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace LSharp.Transitions
+namespace LSharp.Transitions.UpVal
 {
-	public class OMove(byte a, byte b) : ITransition
+	public class OSetUpVal(byte a, byte b) : ITransition
 	{
 		public void Transfer(LuaState state, LStackFrame stackFrame)
 		{
-			state.Stack[stackFrame.FrameBase + a] = state.Stack[stackFrame.FrameBase + b];
+			stackFrame.Closure.UpValues[b].Value = state.Stack[stackFrame.FrameBase + a];
 			stackFrame.PC += 1;
 		}
 	}

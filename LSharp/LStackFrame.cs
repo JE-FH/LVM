@@ -15,6 +15,6 @@ namespace LSharp
 		public ILValue[] ExtraArgs => extraArgs;
 		public LClosure Closure => closure;
 		public int MandatoryReturnCount => returnCount;
-		public bool MetaMethodCalled { get; set; } = false;
+		public bool MetaMethodStalled { get; set; } = false;
 	}
 }

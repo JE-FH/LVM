@@ -14,7 +14,7 @@ namespace LSharp.LTypes
 
 		public uint LHash => unchecked((uint)value.GetHashCode());
 
-		public string Type => "string"
+		public string Type => "string";
 
 		public bool LEqual(ILValue other) =>
 			other is LString lString && lString.Value == value;

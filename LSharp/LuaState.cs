@@ -1,5 +1,9 @@
 ﻿using LSharp.LTypes;
 using LSharp.Transitions;
+using LSharp.Transitions.CallStack;
+using LSharp.Transitions.For;
+using LSharp.Transitions.MetaMethod;
+using LSharp.Transitions.Stack;
 using LuaByteCode.LuaCConstructs;
 using LuaByteCode.LuaCConstructs.Types;
 using System.Text;
@@ -122,29 +126,49 @@ namespace LSharp
 				yield return ins.OpCode switch
 				{
 					InstructionEnum.Move => new OMove(ins.A, ins.B),
+					InstructionEnum.LoadI => new OLoadConstant(ins.A, new LInteger(ins.SBx)),
+					InstructionEnum.LoadF => new OLoadConstant(ins.A, new LNumber(ins.SBx)),
+					InstructionEnum.LoadK => new OLoadConstant(ins.A, ConstantToValue(prototype.Constants[ins.Bx])),
+					InstructionEnum.LoadKX => new OLoadConstant(ins.A, ConstantToValue(prototype.Constants[instructions[i + 1].Ax])),
+					InstructionEnum.LoadFalse => new OLoadConstant(ins.A, LBool.FalseInstance),
+					InstructionEnum.LoadTrue => new OLoadConstant(ins.A, LBool.TrueInstance),
+					InstructionEnum.LoadNil => new OLoadConstant(ins.A, LNil.Instance),
+					
+					InstructionEnum.LFalseSkip => new OLoadFalseSkip(ins.A),
+
+					InstructionEnum.MMBIN => new OMMBin(ins.A, ins.B, (MetaMethodTag)ins.C, instructions[i - 1].A),
+					InstructionEnum.MMBINI => ins.K
+						? new OMMBinKk(ins.A, new LInteger(ins.SB), (MetaMethodTag)ins.C, instructions[i - 1].A)
+						: new OMMBinK(ins.A, new LInteger(ins.SB), (MetaMethodTag)ins.C, instructions[i - 1].A),
+					InstructionEnum.MMBINK => ins.K
+						? new OMMBinKk(ins.A, ConstantToValue(prototype.Constants[ins.B]), (MetaMethodTag)ins.C, instructions[i - 1].A)
+						: new OMMBinK(ins.A, ConstantToValue(prototype.Constants[ins.B]), (MetaMethodTag)ins.C, instructions[i - 1].A),
+
 					InstructionEnum.Call => new OCall(ins.A, ins.B, ins.C),
 					InstructionEnum.TailCall => new OTailCall(ins.A, ins.B),
+					
 					InstructionEnum.Return => new OReturn(ins.A, ins.B),
 					InstructionEnum.Return0 => new OReturn0(),
 					InstructionEnum.Return1 => new OReturn1(ins.A),
+					
 					InstructionEnum.Closure => new OClosure(ins.A, ToPrototype(prototype.Prototypes[ins.Bx])),
+					
 					InstructionEnum.ForPrep => new OForPrep(ins.A, ins.Bx),
 					InstructionEnum.ForLoop => new OForLoop(ins.A, ins.Bx),
+					
 					InstructionEnum.TForPrep => new OTForPrep(ins.A, ins.Bx),
 					InstructionEnum.TForCall => new OTForCall(ins.A, ins.C),
 					InstructionEnum.TForLoop => new OTForLoop(ins.A, ins.Bx),
+					
 					InstructionEnum.VarArgPrep => new ONop(),
 					InstructionEnum.VarArg => new OVarArg(ins.A, ins.C),
+					
 					InstructionEnum.SetList => new OSetList(ins.A, ins.B, ins.C, ins.K),
+					
+					InstructionEnum.Close => new ONop(), // Close is not supported yet
+
 					InstructionEnum.ExtraArg => new OExtraArg(),
-					InstructionEnum.MMBIN => new OMMBin(ins.A, ins.B, (MetaMethodTag) ins.C, instructions[i - 1].A),
-					InstructionEnum.MMBINI => ins.K
-						? new OMMBinIk(ins.A, new LInteger(((IntegerConstant) prototype.Constants[ins.B]).Value), (MetaMethodTag) ins.C, instructions[i - 1].A)
-						: new OMMBinI(ins.A, new LInteger(((IntegerConstant) prototype.Constants[ins.B]).Value), (MetaMethodTag) ins.C, instructions[i - 1].A),
-					InstructionEnum.MMBINK => ins.K
-						? new OMMBinKk(ins.A, ConstantToValue(prototype.Constants[ins.B]), (MetaMethodTag) ins.C, instructions[i - 1].A)
-						: new OMMBinK(ins.A, ConstantToValue(prototype.Constants[ins.B]), (MetaMethodTag) ins.C, instructions[i - 1].A)
-					_ => throw new NotImplementedException()
+					_ => throw new NotImplementedException(),
 				};
 			}
 		}
