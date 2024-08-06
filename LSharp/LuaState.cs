@@ -4,6 +4,7 @@ using LSharp.Transitions.CallStack;
 using LSharp.Transitions.For;
 using LSharp.Transitions.MetaMethod;
 using LSharp.Transitions.Stack;
+using LSharp.Transitions.Table;
 using LuaByteCode.LuaCConstructs;
 using LuaByteCode.LuaCConstructs.Types;
 using System.Text;
@@ -117,6 +118,11 @@ namespace LSharp
 			};
 		}
 
+		private T ConstantToSpecific<T>(ILuaConstant constant) where T : ILValue
+		{
+			return (T)ConstantToValue(constant);
+		}
+
 		private IEnumerable<ITransition> ToTransitions(LuaCPrototype prototype)
 		{
 			var instructions = prototype.Code;
@@ -135,6 +141,25 @@ namespace LSharp
 					InstructionEnum.LoadNil => new OLoadConstant(ins.A, LNil.Instance),
 					
 					InstructionEnum.LFalseSkip => new OLoadFalseSkip(ins.A),
+					
+					InstructionEnum.GetTable => new OGetTable(ins.A, ins.B, ins.C),
+					InstructionEnum.GetTabUp => new OGetTabUp(ins.A, ins.B, ConstantToSpecific<LString>(prototype.Constants[ins.C]).Value),
+					InstructionEnum.GetI => new OGetI(ins.A, ins.B, ins.C),
+					InstructionEnum.GetField => new OGetField(ins.A, ins.B,  ConstantToSpecific<LString>(prototype.Constants[ins.C]).Value),
+					
+					InstructionEnum.SetTable => ins.K
+						? new OSetTableK(ins.A, ins.B, ConstantToValue(prototype.Constants[ins.C]))
+						: new OSetTableR(ins.A, ins.B, ins.C),
+					InstructionEnum.SetI => ins.K
+						? new OSetIK(ins.A, ins.B, ConstantToValue(prototype.Constants[ins.C]))
+						: new OSetIR(ins.A, ins.B, ins.C),
+					InstructionEnum.SetTabUp => ins.K
+						? new OSetTabUpK(
+							ins.A,
+							ConstantToSpecific<LString>(prototype.Constants[ins.B]).Value, 
+							ConstantToValue(prototype.Constants[ins.C])
+						)
+						: new OSetTabUpR(ins.A, ConstantToSpecific<LString>(prototype.Constants[ins.B]).Value, ins.C),
 
 					InstructionEnum.MMBIN => new OMMBin(ins.A, ins.B, (MetaMethodTag)ins.C, instructions[i - 1].A),
 					InstructionEnum.MMBINI => ins.K

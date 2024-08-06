@@ -68,7 +68,7 @@ namespace LSharp.Transitions.MetaMethod
 			}
 
 			stackFrame.MetaMethodStalled = NormalOrMetaAccess(state, stackFrame);
-			if (stackFrame.MetaMethodStalled)
+			if (!stackFrame.MetaMethodStalled)
 			{
 				stackFrame.PC += 1;
 			}

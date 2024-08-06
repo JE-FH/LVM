@@ -134,7 +134,7 @@ namespace LSharp.LTypes
 		}
 
 		//TODO: optimize this
-		public ILValue GetValue(int index)
+		public ILValue GetValue(long index)
 		{
 			return GetValue(new LInteger(index));
 		}
@@ -161,17 +161,24 @@ namespace LSharp.LTypes
 			UpsertValue(new LString(index), value);
 		}
 
-		public MaybeSetContext HasValueMaybeUpdate(ILValue index)
+		//TODO: Optimize this access
+		public MaybeSetContext HasValueMaybeUpdate(long index)
 		{
-			var (found, slotIndex) = GetSlotIndexOrPreviousSlot(index);
-			if (found)
-			{
-				return new MaybeSetContext(slotIndex);
-			}
-			else
-			{
-				return new MaybeSetContext();
-			}
+			var (found, slotIndex) = GetSlotIndexOrPreviousSlot(new LInteger(index));
+			return found ? new MaybeSetContext(slotIndex) : new MaybeSetContext();
+		}
+
+		//TODO: Optimize this access
+		public MaybeSetContext HasValueMaybeUpdate(string index)
+		{
+			var (found, slotIndex) = GetSlotIndexOrPreviousSlot(new LString(index));
+			return found ? new MaybeSetContext(slotIndex) : new MaybeSetContext();
+		}
+
+		public MaybeSetContext HasValueMaybeUpdate(ILValue key)
+		{
+			var (found, slotIndex) = GetSlotIndexOrPreviousSlot(key);
+			return found ? new MaybeSetContext(slotIndex) : new MaybeSetContext();
 		}
 
 		public void UpdateValue(MaybeSetContext ctx, ILValue value)

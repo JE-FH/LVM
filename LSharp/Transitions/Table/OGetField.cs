@@ -3,16 +3,15 @@ using LSharp.Transitions.MetaMethod;
 
 namespace LSharp.Transitions.Table
 {
-	public class OGetTable(byte a, byte b, byte c) : MetaMethodTransition(a)
+	public class OGetField(byte a, byte b, string kC) : MetaMethodTransition(a)
 	{
 		public override bool NormalOrMetaAccess(LuaState state, LStackFrame stackFrame)
 		{
-			var lookUpVal = state.Stack[stackFrame.FrameBase + c];
 			var table = (LTable)state.Stack[stackFrame.FrameBase + b];
-			var val = table.GetValue(lookUpVal);
+			var val = table.GetValue(kC);
 
 			if (val is LNil)
-				return CallMetaMethod(state, stackFrame, [table, lookUpVal], MetaMethodTag.Index);
+				return CallMetaMethod(state, stackFrame, [table, new LString(kC)], MetaMethodTag.Index);
 			
 			state.Stack[stackFrame.FrameBase + a] = val;
 			return false;
