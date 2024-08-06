@@ -142,24 +142,37 @@ namespace LSharp
 					
 					InstructionEnum.LFalseSkip => new OLoadFalseSkip(ins.A),
 					
+					InstructionEnum.GetTabUp => new OGetTabUp(ins.A, ins.B, ConstantToSpecific<LString>(prototype.Constants[ins.C])),
 					InstructionEnum.GetTable => new OGetTable(ins.A, ins.B, ins.C),
-					InstructionEnum.GetTabUp => new OGetTabUp(ins.A, ins.B, ConstantToSpecific<LString>(prototype.Constants[ins.C]).Value),
-					InstructionEnum.GetI => new OGetI(ins.A, ins.B, ins.C),
-					InstructionEnum.GetField => new OGetField(ins.A, ins.B,  ConstantToSpecific<LString>(prototype.Constants[ins.C]).Value),
+					InstructionEnum.GetI => new OGetI(ins.A, ins.B, new LInteger(ins.C)),
+					InstructionEnum.GetField => new OGetField(ins.A, ins.B,  ConstantToSpecific<LString>(prototype.Constants[ins.C])),
 					
+					InstructionEnum.SetTabUp => ins.K
+						? new OSetTabUpK(
+							ins.A,
+							ConstantToSpecific<LString>(prototype.Constants[ins.B]), 
+							ConstantToValue(prototype.Constants[ins.C])
+						)
+						: new OSetTabUpR(ins.A, ConstantToSpecific<LString>(prototype.Constants[ins.B]), ins.C),
 					InstructionEnum.SetTable => ins.K
 						? new OSetTableK(ins.A, ins.B, ConstantToValue(prototype.Constants[ins.C]))
 						: new OSetTableR(ins.A, ins.B, ins.C),
 					InstructionEnum.SetI => ins.K
-						? new OSetIK(ins.A, ins.B, ConstantToValue(prototype.Constants[ins.C]))
-						: new OSetIR(ins.A, ins.B, ins.C),
-					InstructionEnum.SetTabUp => ins.K
-						? new OSetTabUpK(
+						? new OSetIK(ins.A, new LInteger(ins.B), ConstantToValue(prototype.Constants[ins.C]))
+						: new OSetIR(ins.A, new LInteger(ins.B), ins.C),
+					InstructionEnum.SetField => ins.K
+						? new OSetFieldK(
 							ins.A,
-							ConstantToSpecific<LString>(prototype.Constants[ins.B]).Value, 
+							ConstantToSpecific<LString>(prototype.Constants[ins.B]),
 							ConstantToValue(prototype.Constants[ins.C])
 						)
-						: new OSetTabUpR(ins.A, ConstantToSpecific<LString>(prototype.Constants[ins.B]).Value, ins.C),
+						: new OSetFieldR(
+							ins.A,
+							ConstantToSpecific<LString>(prototype.Constants[ins.B]),
+							ins.C
+						),
+
+						InstructionEnum.NewTable => new ONewTable(ins.A, ins.B, ins.C, ins.K, instructions[i + 1].Ax),
 
 					InstructionEnum.MMBIN => new OMMBin(ins.A, ins.B, (MetaMethodTag)ins.C, instructions[i - 1].A),
 					InstructionEnum.MMBINI => ins.K
@@ -190,6 +203,7 @@ namespace LSharp
 					
 					InstructionEnum.SetList => new OSetList(ins.A, ins.B, ins.C, ins.K),
 					
+					InstructionEnum.TBC => new ONop(),
 					InstructionEnum.Close => new ONop(), // Close is not supported yet
 
 					InstructionEnum.ExtraArg => new OExtraArg(),
