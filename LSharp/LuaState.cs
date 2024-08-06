@@ -5,21 +5,34 @@ using LSharp.Transitions.For;
 using LSharp.Transitions.MetaMethod;
 using LSharp.Transitions.Stack;
 using LSharp.Transitions.Table;
+using LuaByteCode;
 using LuaByteCode.LuaCConstructs;
 using LuaByteCode.LuaCConstructs.Types;
 using System.Text;
+using Shared;
 
 namespace LSharp
 {
-	public class LuaState()
+	public class LuaState(ILuaCompiler compiler)
 	{
 		public LStack Stack { get; } = new();
 		public List<IStackFrame> CallStack { get; } = [];
 		public LTable EnvironmentTable { get; } = new();
 
-		public LClosure LoadFile(LuaCFile luaCFile, ILValue[] args)
+		public LClosure StringToClosure(string code)
 		{
-			return LuaFileToTopClosure(luaCFile, args);
+			var compiled = compiler.Compile(Encoding.UTF8.GetBytes(code));
+			var byteCodeReader = new LuaByteCodeReader();
+			var file = byteCodeReader.ParseLuaCFile(compiled);
+			return LuaFileToClosure(file);
+		}
+
+		public LClosure FileToClosure(Stream fileStream)
+		{
+			var compiled = compiler.Compile(fileStream.ReadAll());
+			var byteCodeReader = new LuaByteCodeReader();
+			var file = byteCodeReader.ParseLuaCFile(compiled);
+			return LuaFileToClosure(file);
 		}
 
 		public void TopLevelCall(LClosure closure, ILValue[] args)
@@ -87,7 +100,7 @@ namespace LSharp
 			return CallStack.Count == 0;
 		}
 
-		private LClosure LuaFileToTopClosure(LuaCFile luaCFile, ILValue[] args)
+		private LClosure LuaFileToClosure(LuaCFile luaCFile)
 		{
 			return new LClosure(
 				ToPrototype(luaCFile.TopLevelFunction),
@@ -172,7 +185,11 @@ namespace LSharp
 							ins.C
 						),
 
-						InstructionEnum.NewTable => new ONewTable(ins.A, ins.B, ins.C, ins.K, instructions[i + 1].Ax),
+					InstructionEnum.NewTable => new ONewTable(ins.A, ins.B, ins.C, ins.K, instructions[i + 1].Ax),
+
+					InstructionEnum.Self => ins.K
+						? new OSelfK(ins.A, ins.B, ConstantToSpecific<LString>(prototype.Constants[ins.C]))
+						: new OSelfR(ins.A, ins.B, ins.C),
 
 					InstructionEnum.MMBIN => new OMMBin(ins.A, ins.B, (MetaMethodTag)ins.C, instructions[i - 1].A),
 					InstructionEnum.MMBINI => ins.K

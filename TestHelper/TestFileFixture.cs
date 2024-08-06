@@ -1,4 +1,6 @@
-﻿namespace LVMTest
+﻿using Shared;
+
+namespace TestHelper
 {
 	public class TestFileFixture
 	{

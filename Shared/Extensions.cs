@@ -1,6 +1,6 @@
-﻿namespace LVMTest
+﻿namespace Shared
 {
-	internal static class Extensions
+	public static class Extensions
 	{
 		public static byte[] ReadAll(this Stream stream)
 		{

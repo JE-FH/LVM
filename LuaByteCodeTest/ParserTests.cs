@@ -1,8 +1,8 @@
 using LuaByteCode;
 using LuaByteCode.LuaCConstructs;
 using LuaByteCode.LuaCConstructs.Types;
-using LVMTest;
 using System.Text;
+using TestHelper;
 
 namespace LuaByteCodeTest
 {

@@ -1,3 +1,8 @@
 a = {}
 
-a.bob = 123;
+function b()
+    local a = 1;
+    function c()
+        b = 1
+    end
+end

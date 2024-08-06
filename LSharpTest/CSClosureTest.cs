@@ -47,7 +47,7 @@ namespace LSharpTest
 		[Fact]
 		public void TestCalls()
 		{
-			LuaState luaState = new();
+			LuaState luaState = new(null);
 			luaState.EnvironmentTable.SetValue("concat", createConcatClosure());
 
 			luaState.TopLevelCall(new CSClosure(mainFunc), []);
