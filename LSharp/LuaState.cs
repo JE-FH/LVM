@@ -9,7 +9,6 @@ using LuaByteCode;
 using LuaByteCode.LuaCConstructs;
 using LuaByteCode.LuaCConstructs.Types;
 using System.Text;
-using Shared;
 
 namespace LSharp
 {
@@ -21,7 +20,8 @@ namespace LSharp
 
 		public LClosure StringToClosure(string code)
 		{
-			var compiled = compiler.Compile(Encoding.UTF8.GetBytes(code));
+			using var stream = new MemoryStream(Encoding.UTF8.GetBytes(code));
+			var compiled = compiler.Compile(stream, "string");
 			var byteCodeReader = new LuaByteCodeReader();
 			var file = byteCodeReader.ParseLuaCFile(compiled);
 			return LuaFileToClosure(file);
@@ -29,7 +29,7 @@ namespace LSharp
 
 		public LClosure FileToClosure(Stream fileStream)
 		{
-			var compiled = compiler.Compile(fileStream.ReadAll());
+			var compiled = compiler.Compile(fileStream, "some file");
 			var byteCodeReader = new LuaByteCodeReader();
 			var file = byteCodeReader.ParseLuaCFile(compiled);
 			return LuaFileToClosure(file);
