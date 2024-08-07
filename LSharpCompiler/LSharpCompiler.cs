@@ -1,4 +1,5 @@
 ﻿using LSharp;
+using Shared;
 using System.Runtime.InteropServices;
 
 namespace LSharpCompiler
@@ -13,103 +14,40 @@ namespace LSharpCompiler
 			return true;
 		}
 
-		public static unsafe int StreamWriter(NativeLuaState L, void* dataPointer, nuint size, nint userData)
-		{
-			var streamHandle = GCHandle.FromIntPtr(userData);
-			try
-			{
-				if (streamHandle.Target is Stream stream)
-				{
-					stream.Write(new Span<byte>(dataPointer, (int)size));
-					return 0;
-				}
-				else
-				{
-					return 1;
-				}
-			}
-			finally
-			{
-				streamHandle.Free();
-			}
-		}
-
-		public static unsafe byte* StreamReader(NativeLuaState L, nint userData, nuint* readAmount)
-		{
-			var ctxHandle = GCHandle.FromIntPtr(userData);
-			if (ctxHandle.Target is not ReadFileContext ctx)
-				return null;
-
-			var streamHandle = GCHandle.FromIntPtr(ctx.streamPtr);
-			if (streamHandle.Target is not Stream stream)
-			{
-				ctxHandle.Free();
-				return null;
-			}
-
-			int amountRead = stream.Read(new Span<byte>(ctx.buffer, ctx.bufferSize));
-			if (amountRead <= 0)
-			{
-				*readAmount = 0;
-				streamHandle.Free();
-				ctxHandle.Free();
-				return null;
-			}
-
-			*readAmount = (nuint)amountRead;
-			
-			streamHandle.Free();
-			ctxHandle.Free();
-			
-			return ctx.buffer;
-		}
-
 		public unsafe int Load(Stream input, string chunkName, string mode)
 		{
-			var buffer = new byte[4096];
-			fixed (byte* rawBuffer = buffer)
-			{
-				GCHandle streamHandle = GCHandle.Alloc(input, GCHandleType.Pinned);
-				var context = new ReadFileContext
-				{
-					buffer = rawBuffer,
-					bufferSize = buffer.Length,
-					streamPtr = streamHandle.AddrOfPinnedObject()
-				};
+			var streamBuffer = input.ReadAll();
 
+			fixed (byte* pStreamBuffer = streamBuffer)
+			{
+				var context = new ReadFileContext(pStreamBuffer, streamBuffer.Length);
 				GCHandle ctxHandle = GCHandle.Alloc(context, GCHandleType.Pinned);
-				
-				int res = lua.lua_load(this, &StreamReader, ctxHandle.AddrOfPinnedObject(), chunkName, mode);
-				
-				streamHandle.Free();
+				int res = lua.lua_load(this, new lua.LuaReader(ReadFileContext.StreamReader), (nint) ctxHandle, chunkName, mode);
+
 				ctxHandle.Free();
-				
+
 				return res;
 			}
 		}
 
-		public int Dump(Stream output)
+		public unsafe int Dump(Stream output)
 		{
-			GCHandle handle = GCHandle.Alloc(output, GCHandleType.Pinned);
-			try
-			{
-				unsafe
-				{
-					return lua.lua_dump(this, &StreamWriter, handle.AddrOfPinnedObject(), 0);
-				}
-			}
-			finally
-			{
-				handle.Free();
-			}
-		}
-	}
+			nint size = 4096;
+			var accumulator = Marshal.AllocHGlobal(size);
+			var context = new WriteFileContext(accumulator, size);
+			GCHandle ctxHandle = GCHandle.Alloc(context, GCHandleType.Pinned);
+			int res = lua.lua_dump(this, new lua.LuaWriter(WriteFileContext.StreamWriter), (nint) ctxHandle, 0);
 
-	unsafe struct ReadFileContext
-	{
-		public required nint streamPtr;
-		public required byte* buffer;
-		public required int bufferSize;
+			context = (WriteFileContext) ctxHandle.Target!;
+			
+			var dataSpan = new Span<byte>((void*)context._accumulator, (int)context._accumulatorEnd);
+			
+			output.Write(dataSpan);
+
+			Marshal.FreeHGlobal(context._accumulator);
+			ctxHandle.Free();
+			return res;
+		}
 	}
 
 	internal static partial class lua
@@ -121,14 +59,20 @@ namespace LSharpCompiler
 		internal static partial void lua_close(IntPtr state);
 
 		[LibraryImport(nameof(lua), EntryPoint = nameof(lua_dump))]
-		internal static unsafe partial int lua_dump(NativeLuaState L, delegate* managed<NativeLuaState, void*, nuint, nint, int> luaWriter, nint userData, int strip);
+		internal static unsafe partial int lua_dump(NativeLuaState L, LuaWriter luaWriter, nint userData, int strip);
 
 		[LibraryImport(
 			nameof(lua),
 			EntryPoint = nameof(lua_load),
 			StringMarshalling = StringMarshalling.Utf8
 		)]
-		internal static unsafe partial int lua_load(NativeLuaState L, delegate* managed<NativeLuaState, nint, nuint*, byte*> luaReader, nint userData, string chunkName, string mode);
+		internal static unsafe partial int lua_load(NativeLuaState L, LuaReader luaReader, nint userData, string chunkName, string mode);
+
+		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+		public unsafe delegate byte* LuaReader(nint L, nint userData, nuint* readAmount);
+
+		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+		public unsafe delegate int LuaWriter(nint L, void* dataPointer, nuint size, nint userData);
 	}
 
 	public class LSharpCompiler : ILuaCompiler
@@ -144,6 +88,9 @@ namespace LSharpCompiler
 
 			var stream = new MemoryStream();
 			res = state.Dump(stream);
+
+			stream.Seek(0, SeekOrigin.Begin);
+
 			if (res != 0)
 			{
 				throw new Exception("adfdfdf");

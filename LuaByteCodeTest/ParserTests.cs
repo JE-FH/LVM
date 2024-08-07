@@ -13,7 +13,7 @@ namespace LuaByteCodeTest
 		{
 			LuaByteCodeReader reader = new();
 
-			using var testFileStream = testFiles.GetTestFile("simple.out");
+			using var testFileStream = testFiles.GetTestFile("simple.bin");
 
 			var header = reader.ParseHeader(testFileStream);
 
@@ -36,7 +36,7 @@ namespace LuaByteCodeTest
 		[InlineData(0x1A, 0xEF, typeof(UnexpectedCheckNumberException))]
 		public void ParseHeader_TestInvalidFiles(int indexToChange, byte newValue, Type expectedException)
 		{
-			var testFile = testFiles.GetTestFileBytes("simple.out");
+			var testFile = testFiles.GetTestFileBytes("simple.bin");
 			testFile[indexToChange] = newValue;
 
 			LuaByteCodeReader reader = new();
@@ -63,7 +63,7 @@ namespace LuaByteCodeTest
 		[InlineData(0x1A)]
 		public void ParseHeader_TestUnexpectedEnd(int length)
 		{
-			var testFile = testFiles.GetTestFileBytes("simple.out")[0..length].ToArray();
+			var testFile = testFiles.GetTestFileBytes("simple.bin")[0..length].ToArray();
 			LuaByteCodeReader reader = new();
 
 			Assert.Throws<UnexpectedEndOfStreamException>(
@@ -78,7 +78,7 @@ namespace LuaByteCodeTest
 		[Fact]
 		public void ParseHeader_ExactLength()
 		{
-			var testFile = testFiles.GetTestFileBytes("simple.out")[0..0x1F].ToArray();
+			var testFile = testFiles.GetTestFileBytes("simple.bin")[0..0x1F].ToArray();
 			LuaByteCodeReader reader = new();
 
 			using MemoryStream memoryStream = new(testFile);
@@ -88,13 +88,13 @@ namespace LuaByteCodeTest
 		[Fact]
 		public void ParseFunction_Test()
 		{
-			var testFile = testFiles.GetTestFileBytes("simple.out")[0x20..].ToArray();
+			var testFile = testFiles.GetTestFileBytes("simple.bin")[0x20..].ToArray();
 			LuaByteCodeReader reader = new();
 
 			using MemoryStream memoryStream = new(testFile);
 			var parsed = reader.ParseFunction(memoryStream);
 
-			Assert.Equal(Encoding.UTF8.GetBytes("@test.lua"), parsed.Source);
+			Assert.Equal(Encoding.UTF8.GetBytes("@simple.lua"), parsed.Source);
 			Assert.Equal(0, parsed.LineDefined);
 			Assert.Equal(0, parsed.LastLineDefined);
 			Assert.Equal(0, parsed.NumParams);
@@ -112,7 +112,7 @@ namespace LuaByteCodeTest
 		[Fact]
 		public void InstructionParser_Test()
 		{
-			var testFile = testFiles.GetTestFile("simple.out");
+			var testFile = testFiles.GetTestFile("simple.bin");
 			LuaByteCodeReader reader = new();
 
 			var parsed = reader.ParseLuaCFile(testFile);
@@ -145,7 +145,7 @@ namespace LuaByteCodeTest
 		[InlineData(59, InstructionEnum.Return, 13, true, 1, 1)]
 		public void InstructionParser_TestABC(int pc, InstructionEnum expectedOpcode, byte expectedA, bool expectedK, byte expectedB, byte expectedC)
 		{
-			var testFile = testFiles.GetTestFile("markov-chain.out");
+			var testFile = testFiles.GetTestFile("markov-chain.bin");
 			LuaByteCodeReader reader = new();
 
 			var parsed = reader.ParseLuaCFile(testFile);
@@ -162,7 +162,7 @@ namespace LuaByteCodeTest
 		[Fact]
 		public void InstructionParser_TestIABx()
 		{
-			var testFile = testFiles.GetTestFile("markov-chain.out");
+			var testFile = testFiles.GetTestFile("markov-chain.bin");
 			LuaByteCodeReader reader = new();
 
 			var parsed = reader.ParseLuaCFile(testFile);
@@ -177,7 +177,7 @@ namespace LuaByteCodeTest
 		[Fact]
 		public void InstructionParser_TestIAsBx()
 		{
-			var testFile = testFiles.GetTestFile("markov-chain.out");
+			var testFile = testFiles.GetTestFile("markov-chain.bin");
 			LuaByteCodeReader reader = new();
 
 			var parsed = reader.ParseLuaCFile(testFile);
@@ -192,7 +192,7 @@ namespace LuaByteCodeTest
 		[Fact]
 		public void InstructionParser_TestIAx()
 		{
-			var testFile = testFiles.GetTestFile("markov-chain.out");
+			var testFile = testFiles.GetTestFile("markov-chain.bin");
 			LuaByteCodeReader reader = new();
 
 			var parsed = reader.ParseLuaCFile(testFile);
@@ -206,7 +206,7 @@ namespace LuaByteCodeTest
 		[Fact]
 		public void InstructionParser_TestIsJ()
 		{
-			var testFile = testFiles.GetTestFile("markov-chain.out");
+			var testFile = testFiles.GetTestFile("markov-chain.bin");
 			LuaByteCodeReader reader = new();
 
 			var parsed = reader.ParseLuaCFile(testFile);

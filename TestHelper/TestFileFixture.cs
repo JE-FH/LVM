@@ -8,7 +8,7 @@ namespace TestHelper
 		private Dictionary<string, byte[]> files;
 		public TestFileFixture()
 		{
-			testFilesLocation = Path.Join(Directory.GetCurrentDirectory(), "../../../test-files");
+			testFilesLocation = Path.Join(Directory.GetCurrentDirectory(), "test-files");
 			files = [];
 		}
 

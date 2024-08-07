@@ -5,15 +5,19 @@ namespace LuaCompilerTest
 {
 	public class CompilerTest(TestFileFixture testFiles) : IClassFixture<TestFileFixture>
 	{
-		[Fact]
-		public void tgt()
+		[Theory]
+		[InlineData("simple")]
+		[InlineData("markov-chain")]
+		public void tgt(string baseFileName)
 		{
-			using var testFile = testFiles.GetTestFile("simple.lua");
+			using var testFile = testFiles.GetTestFile($"{baseFileName}.lua");
+			var referenceBytes = testFiles.GetTestFileBytes($"{baseFileName}.bin");
 
 			var compiler = new LSharpCompiler.LSharpCompiler();
-			using var outStream = compiler.Compile(testFile, "simple.lua");
+			using var outStream = compiler.Compile(testFile, $"@{baseFileName}.lua");
 
-			byte[] compiled = outStream.ReadAll();
+			byte[] compiledBytes = outStream.ReadAll();
+			Assert.Equal(referenceBytes, compiledBytes);
 		}
 	}
 }
