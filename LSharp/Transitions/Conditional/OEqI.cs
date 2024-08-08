@@ -1,4 +1,5 @@
-﻿using LSharp.LTypes;
+﻿using LSharp.Helpers;
+using LSharp.LTypes;
 using LSharp.Transitions.MetaMethod;
 using System;
 using System.Collections.Generic;
@@ -8,14 +9,17 @@ using System.Threading.Tasks;
 
 namespace LSharp.Transitions.Conditional
 {
-	public class OEqI(byte a, LInteger sB, bool k) : EqualityTransition<ILValue, LInteger>(k)
+	public class OEqI(byte a, LInteger sB, bool k) : ITransition
 	{
-		protected override bool Comparison(ILValue lhs, LInteger rhs)
-			=> sB.LEqual(lhs);
-
-		protected override (ILValue, LInteger) GetComparedValues(LState state, LStackFrame stackFrame)
-		{
-			return (state.Stack[stackFrame.FrameBase + a], sB);
+		public void Transfer(LState state, LStackFrame stackFrame) {
+			MetaMethodHelper.EqualityMM(
+				state, stackFrame, k,
+				(a, _) => sB.LEqual(a),
+				() => (
+					state.Stack[stackFrame.FrameBase + a],
+					sB
+				)
+			);
 		}
 	}
 }

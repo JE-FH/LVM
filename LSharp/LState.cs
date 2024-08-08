@@ -204,6 +204,12 @@ namespace LSharp
 						? new OMMBinKk(ins.A, ConstantToValue(K[ins.B]), (MetaMethodTag)ins.C, instructions[i - 1].A)
 						: new OMMBinK(ins.A, ConstantToValue(K[ins.B]), (MetaMethodTag)ins.C, instructions[i - 1].A),
 
+					InstructionEnum.Len => new OLen(ins.A, ins.B),
+
+					InstructionEnum.GtI => new OGtI(ins.A, new LInteger(ins.SB), ins.K),
+
+					InstructionEnum.Test => new OTest(ins.A, ins.K),
+
 					InstructionEnum.Call => new OCall(ins.A, ins.B, ins.C),
 					InstructionEnum.TailCall => new OTailCall(ins.A, ins.B),
 					

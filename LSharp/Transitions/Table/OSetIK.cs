@@ -3,12 +3,15 @@ using LSharp.Transitions.MetaMethod;
 
 namespace LSharp.Transitions.Table
 {
-	internal class OSetIK(byte a, LInteger b, ILValue kC) : MetaMethodTransition(-1)
+	public class OSetIK(byte a, LInteger b, ILValue kC) : ITransition
 	{
-		public override bool NormalOrMetaAccess(LState state, LStackFrame stackFrame)
-		{
-			var table = (LTable)state.Stack[stackFrame.FrameBase + a];
-			return UpsertTable(state, stackFrame, table, b, kC);
+		public void Transfer(LState state, LStackFrame stackFrame) {
+			MetaMethodHelper.TableSet(
+				state, stackFrame,
+				() => (LTable)state.Stack[stackFrame.FrameBase + a],
+				() => b,
+				() => kC
+			);
 		}
 	}
 }

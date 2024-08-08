@@ -9,16 +9,16 @@ using System.Threading.Tasks;
 
 namespace LSharp.Transitions.Conditional
 {
-	internal class OEq(byte a, byte b, bool k) : EqualityTransition<ILValue, ILValue>(k)
+	public class OEq(byte a, byte b, bool k) : ITransition
 	{
-		protected override bool Comparison(ILValue lhs, ILValue rhs) =>
-			ArithmeticHelper.Equal(lhs, rhs);
-
-		protected override (ILValue, ILValue) GetComparedValues(LState state, LStackFrame stackFrame)
-		{
-			return (
-				state.Stack[stackFrame.FrameBase + a],
-				state.Stack[stackFrame.FrameBase + b]
+		public void Transfer(LState state, LStackFrame stackFrame) {
+			MetaMethodHelper.EqualityMM(
+				state, stackFrame, k,
+				ArithmeticHelper.Equal,
+				() => (
+					state.Stack[stackFrame.FrameBase + a],
+					state.Stack[stackFrame.FrameBase + b]
+				)
 			);
 		}
 	}

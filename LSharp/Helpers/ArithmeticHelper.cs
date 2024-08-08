@@ -2,8 +2,15 @@
 
 namespace LSharp.Helpers
 {
+	public enum TernaryBool {
+		False,
+		True,
+		Unknown
+	}
+
 	public static class ArithmeticHelper
 	{
+		private static TernaryBool ToTern(bool val) => val ? TernaryBool.True : TernaryBool.False;
 		public static ILValue? Add(ILValue valueA, ILValue valueB)
 		{
 			return (valueA, valueB) switch
@@ -77,35 +84,53 @@ namespace LSharp.Helpers
 			};
 		}
 
-		public static bool? LessThan(ILValue valueA, ILValue valueB)
+		public static TernaryBool LessThan(ILValue valueA, ILValue valueB)
 		{
 			return (valueA, valueB) switch
 			{
-				(LInteger a, LInteger b) => a.Value < b.Value,
-				(LInteger a, LNumber b) => a.Value < b.Value,
-				(LNumber a, LNumber b) => a.Value < b.Value,
-				(LNumber a, LInteger b) => a.Value < b.Value,
-				_ => null
+				(LInteger a, LInteger b) => ToTern(a.Value < b.Value),
+				(LInteger a, LNumber b) => ToTern(a.Value < b.Value),
+				(LNumber a, LNumber b) => ToTern(a.Value < b.Value),
+				(LNumber a, LInteger b) => ToTern(a.Value < b.Value),
+				(LString a, LString b) => ToTern(string.Compare(a.Value, b.Value, StringComparison.Ordinal) < 0),
+				_ => TernaryBool.Unknown
 			};
 		}
 
-		public static bool? LessThanOrEqual(ILValue valueA, ILValue valueB)
+		public static TernaryBool LessThanOrEqual(ILValue valueA, ILValue valueB)
 		{
 			return (valueA, valueB) switch
 			{
-				(LInteger a, LInteger b) => a.Value <= b.Value,
-				(LInteger a, LNumber b) => a.Value <= b.Value,
-				(LNumber a, LNumber b) => a.Value <= b.Value,
-				(LNumber a, LInteger b) => a.Value <= b.Value,
-				_ => null
+				(LInteger a, LInteger b) => ToTern(a.Value <= b.Value),
+				(LInteger a, LNumber b) => ToTern(a.Value <= b.Value),
+				(LNumber a, LNumber b) => ToTern(a.Value <= b.Value),
+				(LNumber a, LInteger b) => ToTern(a.Value <= b.Value),
+				(LString a, LString b) => ToTern(string.Compare(a.Value, b.Value, StringComparison.Ordinal) <= 0),
+				_ => TernaryBool.Unknown
 			};
 		}
 
-		public static bool? GreaterThanOrEqual(ILValue valueA, ILValue valueB) =>
-			!LessThan(valueA, valueB);
+		public static TernaryBool GreaterThanOrEqual(ILValue valueA, ILValue valueB) {
+			var val = LessThan(valueA, valueB);
 
-		public static bool? GreaterThan(ILValue valueA, ILValue valueB) =>
-			!LessThanOrEqual(valueA, valueB);
+			return val switch {
+				TernaryBool.True => TernaryBool.False,
+				TernaryBool.False => TernaryBool.True,
+				TernaryBool.Unknown => TernaryBool.Unknown,
+				_ => throw new NotImplementedException()
+			};
+		}
+
+		public static TernaryBool GreaterThan(ILValue valueA, ILValue valueB) {
+			var val = LessThanOrEqual(valueA, valueB);
+
+			return val switch {
+				TernaryBool.True => TernaryBool.False,
+				TernaryBool.False => TernaryBool.True,
+				TernaryBool.Unknown => TernaryBool.Unknown,
+				_ => throw new NotImplementedException()
+			};
+		}
 
 		public static bool Equal(ILValue valueA, ILValue valueB)
 		{

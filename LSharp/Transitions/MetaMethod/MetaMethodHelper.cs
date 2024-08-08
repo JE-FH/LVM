@@ -1,5 +1,7 @@
 ﻿using LSharp.Helpers;
 using LSharp.LTypes;
+using System.Diagnostics;
+using System.Reflection.Metadata.Ecma335;
 
 namespace LSharp.Transitions.MetaMethod
 {
@@ -58,6 +60,117 @@ namespace LSharp.Transitions.MetaMethod
 			state.Stack.SetTop(stackFrame.FrameTop);
 			stackFrame.PC += 1;
 			return result;
+		}
+
+		public static void TableSet(
+			LState state,
+			LStackFrame stackFrame,
+			Func<LTable> getTable,
+			Func<ILValue> getKey,
+			Func<ILValue> getVal
+		) {
+			if (stackFrame.MetaMethodStalled) {
+				stackFrame.PC += 1;
+				return;
+			}
+
+			var table = getTable();
+			var key = getKey();
+
+			var ctx = table.HasValueMaybeUpdate(key);
+
+			if (ctx.HasValue) {
+				table.UpdateValue(ctx, getVal());
+				stackFrame.PC += 1;
+				return;
+			}
+
+			CallMetaMethod(state, stackFrame, [table, key, getVal()], MetaMethodTag.NewIndex);
+		}
+
+		private static ILValue PopMMReturn(LState state, LStackFrame stackFrame) {
+			stackFrame.MetaMethodStalled = false;
+			var result = state.Stack[stackFrame.FrameTop - 1];
+			stackFrame.FrameTop -= 1;
+			state.Stack.SetTop(stackFrame.FrameTop);
+			stackFrame.PC += 1;
+			return result;
+		}
+
+		public static void UnaryMM<T>(
+			LState state,
+			LStackFrame stackFrame,
+			MetaMethodTag tag,
+			Func<T, ILValue?> attempt,
+			Func<T> getVal,
+			Action<ILValue> setResult
+		) where T : ILValue {
+			if (stackFrame.MetaMethodStalled) {
+				setResult(PopMMReturn(state, stackFrame));
+				return;
+			}
+			var val = getVal();
+			if (attempt(val) is ILValue newVal) {
+				setResult(val);
+				stackFrame.PC += 1;
+				return;
+			}
+			CallMetaMethod(state, stackFrame, [val], tag);
+		}
+
+		public static void EqualityMM<T1, T2>(
+			LState state,
+			LStackFrame stackFrame,
+			bool k,
+			Func<T1, T2, bool> comparison,
+			Func<(T1, T2)> getVals
+		) where T1 : ILValue where T2 : ILValue {
+			if (stackFrame.MetaMethodStalled) {
+				if (ArithmeticHelper.IsTruthy(PopMMReturn(state, stackFrame)) != k)
+					stackFrame.PC += 2;
+				else
+					stackFrame.PC += 1;
+				return;
+			}
+			var (lhs, rhs) = getVals();
+
+			if (lhs is LTable && rhs is LTable && !lhs.LEqual(rhs)) {
+				CallMetaMethod(state, stackFrame, [lhs, rhs], MetaMethodTag.Eq);
+				return;
+			}
+
+			if (comparison(lhs, rhs) != k)
+				stackFrame.PC += 2;
+			else
+				stackFrame.PC += 1;
+		}
+
+		public static void OrderMM<T1, T2>(
+			LState state,
+			LStackFrame stackFrame,
+			bool k,
+			MetaMethodTag tag,
+			Func<T1, T2, TernaryBool> comparison,
+			Func<(T1, T2)> getVals
+		) where T1 : ILValue where T2 : ILValue {
+			if (stackFrame.MetaMethodStalled) {
+				if (ArithmeticHelper.IsTruthy(PopMMReturn(state, stackFrame)) != k)
+					stackFrame.PC += 2;
+				else
+					stackFrame.PC += 1;
+				return;
+			}
+			var (lhs, rhs) = getVals();
+			var res = comparison(lhs, rhs);
+			if (res == TernaryBool.Unknown) {
+				CallMetaMethod(state, stackFrame, [lhs, rhs], tag);
+				return;
+			}
+
+			if (res != (k ? TernaryBool.True : TernaryBool.False))
+				stackFrame.PC += 2;
+			else
+				stackFrame.PC += 1;
 		}
 	}
 
@@ -122,8 +235,6 @@ namespace LSharp.Transitions.MetaMethod
 			if (lhs is LTable && rhs is LTable && !lhs.LEqual(rhs))
 			{
 				MetaMethodHelper.CallMetaMethod(state, stackFrame, [lhs, rhs], MetaMethodTag.Eq);
-				stackFrame.MetaMethodStalled = true;
-
 				return;
 			}
 
