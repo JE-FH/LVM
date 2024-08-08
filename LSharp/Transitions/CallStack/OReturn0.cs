@@ -4,7 +4,7 @@ namespace LSharp.Transitions.CallStack
 {
 	public class OReturn0() : ITransition
     {
-        public void Transfer(LuaState state, LStackFrame stackFrame)
+        public void Transfer(LState state, LStackFrame stackFrame)
         {
             state.CallStack.RemoveAt(state.CallStack.Count - 1);
             if (state.CallStack.Count == 0)

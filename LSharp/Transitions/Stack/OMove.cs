@@ -8,7 +8,7 @@ namespace LSharp.Transitions.Stack
 {
     public class OMove(byte a, byte b) : ITransition
     {
-        public void Transfer(LuaState state, LStackFrame stackFrame)
+        public void Transfer(LState state, LStackFrame stackFrame)
         {
             state.Stack[stackFrame.FrameBase + a] = state.Stack[stackFrame.FrameBase + b];
             stackFrame.PC += 1;

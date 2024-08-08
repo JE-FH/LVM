@@ -8,6 +8,6 @@ namespace LSharp.Transitions
 {
 	public interface ITransition
 	{
-		public void Transfer(LuaState state, LStackFrame stackFrame);
+		public void Transfer(LState state, LStackFrame stackFrame);
 	}
 }

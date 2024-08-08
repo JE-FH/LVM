@@ -1,8 +1,10 @@
 ﻿using LSharp;
 using Shared;
 using System.Runtime.InteropServices;
+using System.Text;
+using System.Text.Unicode;
 
-namespace LSharpCompiler
+namespace LuaNativeCompiler
 {
 	internal class NativeLuaState() : SafeHandle(0, true)
 	{
@@ -48,10 +50,34 @@ namespace LSharpCompiler
 			ctxHandle.Free();
 			return res;
 		}
+
+		public unsafe byte[]? ToString(int index)
+		{
+			nint size;
+			byte* buffer = lua.lua_tolstring(this, index, &size);
+			if (buffer == null)
+			{
+				return null;
+			}
+			else
+			{
+				return (new Span<byte>(buffer, (int)size)).ToArray();
+			}
+		}
 	}
 
 	internal static partial class lua
 	{
+		internal enum StatusCode : int
+		{
+			LUA_OK = 0,
+			LUA_YIELD = 1,
+			LUA_ERRRUN = 2,
+			LUA_ERRSYNTAX = 3,
+			LUA_ERRMEM = 4,
+			LUA_ERRERR = 5,
+		}
+
 		[LibraryImport(nameof(lua), EntryPoint = nameof(luaL_newstate))]
 		internal static partial NativeLuaState luaL_newstate();
 
@@ -68,6 +94,9 @@ namespace LSharpCompiler
 		)]
 		internal static unsafe partial int lua_load(NativeLuaState L, LuaReader luaReader, nint userData, string chunkName, string mode);
 
+		[LibraryImport(nameof(lua), EntryPoint = nameof(lua_tolstring))]
+		internal static unsafe partial byte* lua_tolstring(NativeLuaState L, int index, nint* stringSize);
+
 		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
 		public unsafe delegate byte* LuaReader(nint L, nint userData, nuint* readAmount);
 
@@ -81,20 +110,34 @@ namespace LSharpCompiler
 		{
 			var state = lua.luaL_newstate();
 			var res = state.Load(data, chunkName, "t");
-			if (res != 0)
+			if (res == (int)lua.StatusCode.LUA_ERRSYNTAX)
 			{
-				throw new Exception("Ahhh");
+				var errorMessageBytes = state.ToString(-1);
+				if (errorMessageBytes == null)
+				{
+					throw new LuaSyntaxError(
+						"unknown",
+						"lua_load failed with LUA_ERRSYNTAX, however no error message was given"
+					);
+				}
+				var message = Encoding.UTF8.GetString(errorMessageBytes);
+				throw new LuaSyntaxError(message, $"syntax error {message}");
+			}
+			else if (res != (int)lua.StatusCode.LUA_OK)
+			{
+				throw new Exception("Unknown compilation error");
 			}
 
 			var stream = new MemoryStream();
 			res = state.Dump(stream);
-
+			
 			stream.Seek(0, SeekOrigin.Begin);
 
 			if (res != 0)
 			{
-				throw new Exception("adfdfdf");
+				throw new Exception("Dump function failed");
 			}
+
 			return stream;
 		}
 	}

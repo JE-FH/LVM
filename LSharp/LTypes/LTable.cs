@@ -133,48 +133,11 @@ namespace LSharp.LTypes
 			return LNil.Instance;
 		}
 
-		//TODO: optimize this
-		public ILValue GetValue(long index)
-		{
-			return GetValue(new LInteger(index));
-		}
-
-		//TODO: optimize this
-		public ILValue GetValue(string index)
-		{
-			return GetValue(new LString(index));
-		}
-
 		public void SetValue(ILValue index, ILValue value)
 		{
 			UpsertValue(index, value);
 		}
-
-		public void SetValue(int index, ILValue value)
-		{
-			//TODO: Optimize this
-			UpsertValue(new LInteger(index), value);
-		}
-
-		public void SetValue(string index, ILValue value)
-		{
-			UpsertValue(new LString(index), value);
-		}
-
-		//TODO: Optimize this access
-		public MaybeSetContext HasValueMaybeUpdate(long index)
-		{
-			var (found, slotIndex) = GetSlotIndexOrPreviousSlot(new LInteger(index));
-			return found ? new MaybeSetContext(slotIndex) : new MaybeSetContext();
-		}
-
-		//TODO: Optimize this access
-		public MaybeSetContext HasValueMaybeUpdate(string index)
-		{
-			var (found, slotIndex) = GetSlotIndexOrPreviousSlot(new LString(index));
-			return found ? new MaybeSetContext(slotIndex) : new MaybeSetContext();
-		}
-
+		
 		public MaybeSetContext HasValueMaybeUpdate(ILValue key)
 		{
 			var (found, slotIndex) = GetSlotIndexOrPreviousSlot(key);
@@ -234,7 +197,7 @@ namespace LSharp.LTypes
 		public readonly struct MaybeSetContext
 		{
 			internal readonly int SlotIndex;
-			public bool HasValue => SlotIndex == -1;
+			public bool HasValue => SlotIndex > -1;
 			internal MaybeSetContext(int _slotIndex)
 			{
 				SlotIndex = _slotIndex;

@@ -1,10 +1,13 @@
 ﻿using LSharp.LTypes;
 using LSharp.Transitions;
+using LSharp.Transitions.Arithmetic;
 using LSharp.Transitions.CallStack;
+using LSharp.Transitions.Conditional;
 using LSharp.Transitions.For;
 using LSharp.Transitions.MetaMethod;
 using LSharp.Transitions.Stack;
 using LSharp.Transitions.Table;
+using LSharp.Transitions.UpVal;
 using LuaByteCode;
 using LuaByteCode.LuaCConstructs;
 using LuaByteCode.LuaCConstructs.Types;
@@ -12,35 +15,23 @@ using System.Text;
 
 namespace LSharp
 {
-	public class LuaState(ILuaCompiler compiler)
+	public class LState()
 	{
 		public LStack Stack { get; } = new();
 		public List<IStackFrame> CallStack { get; } = [];
 		public LTable EnvironmentTable { get; } = new();
 
-		public LClosure StringToClosure(string code)
+		public LClosure ByteCodeToClosure(LuaCFile file)
 		{
-			using var stream = new MemoryStream(Encoding.UTF8.GetBytes(code));
-			var compiled = compiler.Compile(stream, "string");
-			var byteCodeReader = new LuaByteCodeReader();
-			var file = byteCodeReader.ParseLuaCFile(compiled);
 			return LuaFileToClosure(file);
 		}
 
-		public LClosure FileToClosure(Stream fileStream)
-		{
-			var compiled = compiler.Compile(fileStream, "some file");
-			var byteCodeReader = new LuaByteCodeReader();
-			var file = byteCodeReader.ParseLuaCFile(compiled);
-			return LuaFileToClosure(file);
-		}
-
-		public void TopLevelCall(LClosure closure, ILValue[] args)
+		public void Call(LClosure closure, ILValue[] args)
 		{
 			CallAt(Stack.Top, closure, -1, args);
 		}
 
-		public void TopLevelCall(CSClosure closure, ILValue[] args)
+		public void Call(CSClosure closure, ILValue[] args)
 		{
 			CallAt(Stack.Top, closure, -1, args);
 		}
@@ -97,7 +88,7 @@ namespace LSharp
 				throw new NotImplementedException();
 			}
 
-			return CallStack.Count == 0;
+			return CallStack.Count > 0;
 		}
 
 		private LClosure LuaFileToClosure(LuaCFile luaCFile)
@@ -139,6 +130,7 @@ namespace LSharp
 		private IEnumerable<ITransition> ToTransitions(LuaCPrototype prototype)
 		{
 			var instructions = prototype.Code;
+			var K = prototype.Constants;
 			for (int i = 0; i < instructions.Length; i++)
 			{
 				var ins = instructions[i];
@@ -147,57 +139,70 @@ namespace LSharp
 					InstructionEnum.Move => new OMove(ins.A, ins.B),
 					InstructionEnum.LoadI => new OLoadConstant(ins.A, new LInteger(ins.SBx)),
 					InstructionEnum.LoadF => new OLoadConstant(ins.A, new LNumber(ins.SBx)),
-					InstructionEnum.LoadK => new OLoadConstant(ins.A, ConstantToValue(prototype.Constants[ins.Bx])),
-					InstructionEnum.LoadKX => new OLoadConstant(ins.A, ConstantToValue(prototype.Constants[instructions[i + 1].Ax])),
+					InstructionEnum.LoadK => new OLoadConstant(ins.A, ConstantToValue(K[ins.Bx])),
+					InstructionEnum.LoadKX => new OLoadConstant(ins.A, ConstantToValue(K[instructions[i + 1].Ax])),
 					InstructionEnum.LoadFalse => new OLoadConstant(ins.A, LBool.FalseInstance),
 					InstructionEnum.LoadTrue => new OLoadConstant(ins.A, LBool.TrueInstance),
 					InstructionEnum.LoadNil => new OLoadConstant(ins.A, LNil.Instance),
 					
 					InstructionEnum.LFalseSkip => new OLoadFalseSkip(ins.A),
 					
-					InstructionEnum.GetTabUp => new OGetTabUp(ins.A, ins.B, ConstantToSpecific<LString>(prototype.Constants[ins.C])),
+					InstructionEnum.GetUpVal => new OGetUpVal(ins.A, ins.B),
+					InstructionEnum.SetUpVal => new OSetUpVal(ins.A, ins.B),
+
+					InstructionEnum.GetTabUp => new OGetTabUp(ins.A, ins.B, ConstantToSpecific<LString>(K[ins.C])),
 					InstructionEnum.GetTable => new OGetTable(ins.A, ins.B, ins.C),
 					InstructionEnum.GetI => new OGetI(ins.A, ins.B, new LInteger(ins.C)),
-					InstructionEnum.GetField => new OGetField(ins.A, ins.B,  ConstantToSpecific<LString>(prototype.Constants[ins.C])),
+					InstructionEnum.GetField => new OGetField(ins.A, ins.B,  ConstantToSpecific<LString>(K[ins.C])),
 					
 					InstructionEnum.SetTabUp => ins.K
 						? new OSetTabUpK(
 							ins.A,
-							ConstantToSpecific<LString>(prototype.Constants[ins.B]), 
-							ConstantToValue(prototype.Constants[ins.C])
+							ConstantToSpecific<LString>(K[ins.B]), 
+							ConstantToValue(K[ins.C])
 						)
-						: new OSetTabUpR(ins.A, ConstantToSpecific<LString>(prototype.Constants[ins.B]), ins.C),
+						: new OSetTabUpR(ins.A, ConstantToSpecific<LString>(K[ins.B]), ins.C),
 					InstructionEnum.SetTable => ins.K
-						? new OSetTableK(ins.A, ins.B, ConstantToValue(prototype.Constants[ins.C]))
+						? new OSetTableK(ins.A, ins.B, ConstantToValue(K[ins.C]))
 						: new OSetTableR(ins.A, ins.B, ins.C),
 					InstructionEnum.SetI => ins.K
-						? new OSetIK(ins.A, new LInteger(ins.B), ConstantToValue(prototype.Constants[ins.C]))
+						? new OSetIK(ins.A, new LInteger(ins.B), ConstantToValue(K[ins.C]))
 						: new OSetIR(ins.A, new LInteger(ins.B), ins.C),
 					InstructionEnum.SetField => ins.K
 						? new OSetFieldK(
 							ins.A,
-							ConstantToSpecific<LString>(prototype.Constants[ins.B]),
-							ConstantToValue(prototype.Constants[ins.C])
+							ConstantToSpecific<LString>(K[ins.B]),
+							ConstantToValue(K[ins.C])
 						)
 						: new OSetFieldR(
 							ins.A,
-							ConstantToSpecific<LString>(prototype.Constants[ins.B]),
+							ConstantToSpecific<LString>(K[ins.B]),
 							ins.C
 						),
 
 					InstructionEnum.NewTable => new ONewTable(ins.A, ins.B, ins.C, ins.K, instructions[i + 1].Ax),
 
 					InstructionEnum.Self => ins.K
-						? new OSelfK(ins.A, ins.B, ConstantToSpecific<LString>(prototype.Constants[ins.C]))
+						? new OSelfK(ins.A, ins.B, ConstantToSpecific<LString>(K[ins.C]))
 						: new OSelfR(ins.A, ins.B, ins.C),
+
+					InstructionEnum.AddI => new OAddI(ins.A, ins.B, ins.SC),
+
+					InstructionEnum.Add => new OAdd(ins.A, ins.B, ins.C),
+
+					InstructionEnum.Jmp => new OJmp(ins.SJ),
+
+					InstructionEnum.Eq => new OEq(ins.A, ins.B, ins.K),
+					InstructionEnum.EqI => new OEqI(ins.A, new LInteger(ins.SB), ins.K),
+					InstructionEnum.EqK => new OEqK(ins.A, ConstantToValue(K[ins.B]), ins.K),
 
 					InstructionEnum.MMBIN => new OMMBin(ins.A, ins.B, (MetaMethodTag)ins.C, instructions[i - 1].A),
 					InstructionEnum.MMBINI => ins.K
 						? new OMMBinKk(ins.A, new LInteger(ins.SB), (MetaMethodTag)ins.C, instructions[i - 1].A)
 						: new OMMBinK(ins.A, new LInteger(ins.SB), (MetaMethodTag)ins.C, instructions[i - 1].A),
 					InstructionEnum.MMBINK => ins.K
-						? new OMMBinKk(ins.A, ConstantToValue(prototype.Constants[ins.B]), (MetaMethodTag)ins.C, instructions[i - 1].A)
-						: new OMMBinK(ins.A, ConstantToValue(prototype.Constants[ins.B]), (MetaMethodTag)ins.C, instructions[i - 1].A),
+						? new OMMBinKk(ins.A, ConstantToValue(K[ins.B]), (MetaMethodTag)ins.C, instructions[i - 1].A)
+						: new OMMBinK(ins.A, ConstantToValue(K[ins.B]), (MetaMethodTag)ins.C, instructions[i - 1].A),
 
 					InstructionEnum.Call => new OCall(ins.A, ins.B, ins.C),
 					InstructionEnum.TailCall => new OTailCall(ins.A, ins.B),
@@ -224,7 +229,7 @@ namespace LSharp
 					InstructionEnum.Close => new ONop(), // Close is not supported yet
 
 					InstructionEnum.ExtraArg => new OExtraArg(),
-					_ => throw new NotImplementedException(),
+					_ => throw new NotImplementedException($"{ins.OpCode} is not implemented yet"),
 				};
 			}
 		}

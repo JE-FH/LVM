@@ -1,6 +1,6 @@
 ﻿using System.Runtime.InteropServices;
 
-namespace LSharpCompiler
+namespace LuaNativeCompiler
 {
 	unsafe struct ReadFileContext(byte* buffer, int bufferSize)
 	{
@@ -13,14 +13,15 @@ namespace LSharpCompiler
 			if (ctxHandle.Target is not ReadFileContext ctx)
 				return null;
 
-			if (ctx._called) {
+			if (ctx._called)
+			{
 				ctxHandle.Free();
 				*readAmount = 0;
 				return null;
 			}
 			ctx._called = true;
 
-			*readAmount = (nuint) ctx._bufferSize;
+			*readAmount = (nuint)ctx._bufferSize;
 			var pBuffer = ctx._buffer;
 
 			ctxHandle.Target = ctx;

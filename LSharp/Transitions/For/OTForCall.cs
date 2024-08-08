@@ -4,7 +4,7 @@ namespace LSharp.Transitions.For
 {
 	public class OTForCall(byte a, byte c) : ITransition
     {
-        public void Transfer(LuaState state, LStackFrame stackFrame)
+        public void Transfer(LState state, LStackFrame stackFrame)
         {
             var iteratorClosure = (IClosure)state.Stack[stackFrame.FrameBase + a];
             var iteratorState = state.Stack[stackFrame.FrameBase + a + 1];

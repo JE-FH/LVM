@@ -6,11 +6,11 @@ using System.Threading.Tasks;
 
 namespace LSharp.Transitions
 {
-	public class ONop : ITransition
+	internal class OJmp(int sJ) : ITransition
 	{
 		public void Transfer(LState state, LStackFrame stackFrame)
 		{
-			stackFrame.PC += 1;
+			stackFrame.PC += sJ + 1;
 		}
 	}
 }

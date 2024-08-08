@@ -9,7 +9,7 @@ namespace LSharp.Transitions.Stack
 {
     internal class OVarArg(byte a, byte c) : ITransition
     {
-        public void Transfer(LuaState state, LStackFrame stackFrame)
+        public void Transfer(LState state, LStackFrame stackFrame)
         {
             var wantedArguments = c < 0
                 ? stackFrame.ExtraArgs.Length

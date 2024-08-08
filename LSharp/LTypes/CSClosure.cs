@@ -7,10 +7,10 @@ using System.Threading.Tasks;
 
 namespace LSharp.LTypes
 {
-	public class CSClosure(Func<LuaState, CSStackFrame, IEnumerable<CallYield>> action) : IClosure, ILValue
+	public class CSClosure(Func<LState, CSStackFrame, IEnumerable<CallYield>> action) : IClosure, ILValue
 	{
 		public int MinStackSize => 0;
-		public Func<LuaState, CSStackFrame, IEnumerable<CallYield>> Action => action;
+		public Func<LState, CSStackFrame, IEnumerable<CallYield>> Action => action;
 
 		public uint LHash => unchecked((uint)RuntimeHelpers.GetHashCode(this));
 

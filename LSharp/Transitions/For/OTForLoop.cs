@@ -9,7 +9,7 @@ namespace LSharp.Transitions.For
 {
 	public class OTForLoop(byte a, uint bx) : ITransition
     {
-        public void Transfer(LuaState state, LStackFrame stackFrame)
+        public void Transfer(LState state, LStackFrame stackFrame)
         {
             if (state.Stack[stackFrame.FrameBase + a + 4].LEqual(LNil.Instance))
             {

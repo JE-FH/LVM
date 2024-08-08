@@ -5,10 +5,10 @@ namespace LSharp.Transitions.Table
 {
 	public class OGetTabUp(byte a, byte b, LString kC) : MetaMethodTransition(a)
 	{
-		public override bool NormalOrMetaAccess(LuaState state, LStackFrame stackFrame)
+		public override bool NormalOrMetaAccess(LState state, LStackFrame stackFrame)
 		{
 			var table = (LTable)stackFrame.Closure.UpValues[b].Value;
-			var val = table.GetValue(kC.Value);
+			var val = table.GetValue(kC);
 
 			if (val is LNil) 
 				return CallMetaMethod(state, stackFrame, [table, kC], MetaMethodTag.Index);

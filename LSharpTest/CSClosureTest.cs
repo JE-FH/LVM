@@ -35,26 +35,26 @@ namespace LSharpTest
 			});
 		}
 
-		private static IEnumerable<CallYield> mainFunc(LuaState state, CSStackFrame stackFrame)
+		private static IEnumerable<CallYield> mainFunc(LState state, CSStackFrame stackFrame)
 		{
 			ILValue[] someStrings = [new LString("abc"), new LString("bca"), new LString("cba")];
-			var concat = (IClosure) state.EnvironmentTable.GetValue("concat");
+			var concat = (IClosure) state.EnvironmentTable.GetValue(new LString("concat"));
 			var call = new CallYield(concat, someStrings);
 			yield return call;
-			state.EnvironmentTable.SetValue("val", call.Return[0]);
+			state.EnvironmentTable.SetValue(new LString("val"), call.Return[0]);
 		}
 
 		[Fact]
 		public void TestCalls()
 		{
-			LuaState luaState = new(null);
-			luaState.EnvironmentTable.SetValue("concat", createConcatClosure());
+			LState luaState = new();
+			luaState.EnvironmentTable.SetValue(new LString("concat"), createConcatClosure());
 
-			luaState.TopLevelCall(new CSClosure(mainFunc), []);
+			luaState.Call(new CSClosure(mainFunc), []);
 
-			while (!luaState.Step()) { }
+			while (luaState.Step()) { }
 
-			Assert.Equal("abcbcacba", Assert.IsType<LString>(luaState.EnvironmentTable.GetValue("val")).Value);
+			Assert.Equal("abcbcacba", Assert.IsType<LString>(luaState.EnvironmentTable.GetValue(new LString("val"))).Value);
 		}
 	}
 }

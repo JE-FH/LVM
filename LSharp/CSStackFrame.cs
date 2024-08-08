@@ -15,7 +15,7 @@ namespace LSharp
 		private readonly IEnumerator<CallYield> _actionGenerator;
 		private readonly int _returnCount;
 
-		public CSStackFrame(LuaState luaState, int frameBase, CSClosure closure, int returnCount, ILValue[] args)
+		public CSStackFrame(LState luaState, int frameBase, CSClosure closure, int returnCount, ILValue[] args)
 		{
 			_frameBase = frameBase;
 			_closure = closure;

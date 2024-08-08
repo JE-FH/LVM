@@ -5,7 +5,7 @@ namespace LSharp.Transitions.Table
 {
 	public class OGetTable(byte a, byte b, byte c) : MetaMethodTransition(a)
 	{
-		public override bool NormalOrMetaAccess(LuaState state, LStackFrame stackFrame)
+		public override bool NormalOrMetaAccess(LState state, LStackFrame stackFrame)
 		{
 			var lookUpVal = state.Stack[stackFrame.FrameBase + c];
 			var table = (LTable)state.Stack[stackFrame.FrameBase + b];

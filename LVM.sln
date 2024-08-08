@@ -20,9 +20,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LSharpTest", "LSharpTest\LS
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Shared", "Shared\Shared.csproj", "{0039E810-33CE-4AE3-A221-AFC3CC676F3E}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LSharpCompiler", "LSharpCompiler\LSharpCompiler.csproj", "{0623510F-2DEE-4379-8A51-01D181F65334}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LuaNativeCompiler", "LSharpCompiler\LuaNativeCompiler.csproj", "{0623510F-2DEE-4379-8A51-01D181F65334}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LSharpCompilerTest", "LuaCompilerTest\LSharpCompilerTest.csproj", "{F53D0F25-F576-4BFE-B345-21E8AFF0DE76}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LSharpCompilerTest", "LuaCompilerTest\LSharpCompilerTest.csproj", "{F53D0F25-F576-4BFE-B345-21E8AFF0DE76}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

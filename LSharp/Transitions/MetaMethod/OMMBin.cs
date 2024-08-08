@@ -2,7 +2,7 @@
 {
 	public class OMMBin(byte a, byte b, MetaMethodTag c, byte originalA) : MetaMethodTransition(originalA)
     {
-		public override bool NormalOrMetaAccess(LuaState state, LStackFrame stackFrame)
+		public override bool NormalOrMetaAccess(LState state, LStackFrame stackFrame)
 		{
 			var lhs = state.Stack[stackFrame.FrameBase + a];
 			var rhs = state.Stack[stackFrame.FrameBase + b];

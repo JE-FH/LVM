@@ -9,7 +9,7 @@ namespace LSharp.Transitions.CallStack
 {
     public class OClosure(byte a, LPrototype prototype) : ITransition
     {
-        public void Transfer(LuaState state, LStackFrame stackFrame)
+        public void Transfer(LState state, LStackFrame stackFrame)
         {
             var upValues = prototype.UpValues
                 .Select(upValue => upValue.InStack

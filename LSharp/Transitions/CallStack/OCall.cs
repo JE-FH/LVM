@@ -10,7 +10,7 @@ namespace LSharp.Transitions.CallStack
 {
 	public class OCall(byte a, byte b, byte c) : ITransition
     {
-        public void Transfer(LuaState state, LStackFrame stackFrame)
+        public void Transfer(LState state, LStackFrame stackFrame)
         {
             var closure = (IClosure)state.Stack[stackFrame.FrameBase + a];
             var newFrameBase = stackFrame.FrameBase + a;

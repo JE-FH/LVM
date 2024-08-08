@@ -8,7 +8,7 @@ namespace LSharp.Transitions
 {
     public class OExtraArg : ITransition
     {
-        public void Transfer(LuaState state, LStackFrame stackFrame)
+        public void Transfer(LState state, LStackFrame stackFrame)
         {
             throw new LException("Extra arg instruction was reached");
         }

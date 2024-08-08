@@ -9,7 +9,7 @@ namespace LSharp.Transitions.Stack
 {
     public class OLoadFalseSkip(byte a) : ITransition
     {
-        public void Transfer(LuaState state, LStackFrame stackFrame)
+        public void Transfer(LState state, LStackFrame stackFrame)
         {
             state.Stack[stackFrame.FrameBase + a] = LBool.FalseInstance;
             stackFrame.PC += 2;

@@ -4,13 +4,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace LSharp.Transitions
+namespace LSharp.Transitions.Arithmetic
 {
-	public class ONop : ITransition
+	public class OLen(byte a, byte b) : ITransition
 	{
 		public void Transfer(LState state, LStackFrame stackFrame)
 		{
-			stackFrame.PC += 1;
 		}
 	}
 }
