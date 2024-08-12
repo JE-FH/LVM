@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace LSharp.Transitions.Stack
 {
-	[DebuggerDisplay("LFalseSkip R[{a}]")]
+	[DebuggerDisplay($"{{{nameof(GetDebuggerDisplay)}(),nq}}")]
 	public class OLoadFalseSkip(byte a) : ITransition
     {
         public void Transfer(LState state, LStackFrame stackFrame)
@@ -16,5 +16,8 @@ namespace LSharp.Transitions.Stack
             state.Stack[stackFrame.FrameBase + a] = LBool.FalseInstance;
             stackFrame.PC += 2;
         }
+
+        private string GetDebuggerDisplay() =>
+            $"LFalseSkip R[{a}]";
 	}
 }

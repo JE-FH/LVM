@@ -1,4 +1,5 @@
 ﻿using LSharp;
+using LSharp.Library.Base;
 using LSharp.Library.IO;
 using LSharp.LTypes;
 using LuaByteCode;
@@ -28,6 +29,7 @@ namespace LSharpTest
 			var lState = new LState();
 
 			IOLib.LoadLibrary(lState);
+			BaseLib.LoadLibrary(lState);
 
 			var closure = lState.ByteCodeToClosure(byteCode);
 

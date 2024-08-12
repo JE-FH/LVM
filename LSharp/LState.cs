@@ -102,7 +102,8 @@ namespace LSharp
 				ToTransitions(prototype).ToArray(),
 				prototype.NumParams,
 				prototype.MaxStackSize,
-				prototype.UpValues
+				prototype.UpValues,
+				prototype
 			);
 		}
 
