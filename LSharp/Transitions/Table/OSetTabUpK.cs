@@ -6,7 +6,7 @@ namespace LSharp.Transitions.Table
 	public class OSetTabUpR(byte a, LString kB, byte c) : ITransition
 	{
 		public void Transfer(LState state, LStackFrame stackFrame) {
-			MetaMethodHelper.TableSet(
+			MetaMethodHelper.TableSetMM(
 				state, stackFrame,
 				() => (LTable)stackFrame.Closure.UpValues[a].Value,
 				() => kB,

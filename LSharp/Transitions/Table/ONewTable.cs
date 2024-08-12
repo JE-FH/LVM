@@ -8,7 +8,7 @@ namespace LSharp.Transitions.Table
 		{
 			//TODO: Use all the given information
 			state.Stack[stackFrame.FrameBase + a] = new LTable();
-			stackFrame.PC += 1;
+			stackFrame.PC += 2;
 		}
 	}
 }

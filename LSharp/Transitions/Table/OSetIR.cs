@@ -6,7 +6,7 @@ namespace LSharp.Transitions.Table
 	internal class OSetIR(byte a, LInteger b, byte c) : ITransition
 	{
 		public void Transfer(LState state, LStackFrame stackFrame) {
-			MetaMethodHelper.TableSet(
+			MetaMethodHelper.TableSetMM(
 				state, stackFrame,
 				() => (LTable)state.Stack[stackFrame.FrameBase + a],
 				() => b,

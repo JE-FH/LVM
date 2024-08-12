@@ -151,8 +151,17 @@ namespace LSharp.LTypes
 
 		public ILValue? GetMetaMethod(MetaMethodTag tag)
 		{
-			if (_metaMethods.Length >= (int) tag)
-			{
+			if (MetaTable is null) {
+				return null;
+			} else {
+				var mm = MetaTable.GetActualMetaMethod(tag);
+				return mm;
+			}
+			
+		}
+
+		private ILValue? GetActualMetaMethod(MetaMethodTag tag) {
+			if (_metaMethods.Length >= (int)tag) {
 				return _metaMethods[(int)tag];
 			}
 

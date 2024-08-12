@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 
 namespace LSharp.Transitions.CallStack
 {
+	[DebuggerDisplay("Call R[{a}]...R[{a+c-2}] = R[{a}](R[{a+1}...R[{a+b-1}])")]
 	public class OCall(byte a, byte b, byte c) : ITransition
     {
         public void Transfer(LState state, LStackFrame stackFrame)
@@ -30,5 +31,5 @@ namespace LSharp.Transitions.CallStack
 
             stackFrame.PC += 1;
         }
-    }
+	}
 }

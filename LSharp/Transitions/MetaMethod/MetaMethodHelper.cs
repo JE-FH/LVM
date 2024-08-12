@@ -7,43 +7,15 @@ namespace LSharp.Transitions.MetaMethod
 {
 	internal static class MetaMethodHelper
 	{
-		public static void CallMetaMethod(LState state, LStackFrame stackFrame, ILValue[] args, MetaMethodTag operation, int outputIndex = -1)
-		{
-			ILValue metaMethod = ArithmeticHelper.GetMetaMethod(args[0], args[1], operation);
-
-			//Do something like this for newindex
-			if (operation == MetaMethodTag.Index && args[0] is LTable && metaMethod is LTable mTable)
-			{
-				var val = mTable.GetValue(args[1]);
-				if (val is LNil)
-				{
-					CallMetaMethod(state, stackFrame, [mTable, args[1]], operation, outputIndex);
-				}
-				else
-				{
-					state.Stack[stackFrame.FrameBase + outputIndex] = mTable.GetValue(args[1]) ?? LNil.Instance;
-					stackFrame.PC += 1;
-				}
-				return;
+		public static void CallMetaMethod(LState state, LStackFrame stackFrame, ILValue[] args, IClosure metaMethod, bool saveResult) {
+			if (saveResult) {
+				state.Stack.SetTop(stackFrame.FrameTop + 1);
+				stackFrame.FrameTop += 1;
+				state.CallAt(stackFrame.FrameTop - 1, metaMethod, 1, args);
+			} else {
+				state.Call(metaMethod, args);
 			}
 
-			if (metaMethod is IClosure metaMethodClosure)
-			{
-				if (outputIndex == -1)
-				{
-					state.Stack.SetTop(stackFrame.FrameTop + 1);
-					stackFrame.FrameTop += 1;
-					state.CallAt(stackFrame.FrameTop - 1, metaMethodClosure, 1, args);
-				}
-				else
-				{
-					state.CallAt(stackFrame.FrameTop - 1, metaMethodClosure, 0, args);
-				}
-			}
-			else
-			{
-				throw new LException($"Tried to call {metaMethod.Type} meta method");
-			}
 			stackFrame.MetaMethodStalled = true;
 		}
 
@@ -62,7 +34,52 @@ namespace LSharp.Transitions.MetaMethod
 			return result;
 		}
 
-		public static void TableSet(
+		public static void TableGetMM(
+			LState state,
+			LStackFrame stackFrame,
+			Func<LTable> getTable,
+			Func<ILValue> getKey,
+			Action<ILValue> setResult
+		) {
+			if (stackFrame.MetaMethodStalled) {
+				setResult(PopMMReturn(state, stackFrame));
+				stackFrame.PC += 1;
+				return;
+			}
+
+			TableGetRec(state, stackFrame, getTable(), getKey(), setResult);
+		}
+
+		private static void TableGetRec(
+			LState state,
+			LStackFrame stackFrame,
+			LTable table,
+			ILValue key,
+			Action<ILValue> setResult
+		) {
+			var val = table.GetValue(key);
+			if (val is not LNil) {
+				stackFrame.PC += 1;
+				setResult(val);
+				return;
+			}
+
+			var metaMethod = table.GetMetaMethod(MetaMethodTag.Index);
+			if (metaMethod is not null) {
+				if (metaMethod is LTable innerTable) {
+					TableGetRec(state, stackFrame, innerTable, key, setResult);
+				} else if (metaMethod is IClosure mmClosure) {
+					CallMetaMethod(state, stackFrame, [table, key], mmClosure, true);
+				} else {
+					throw new LException($"attempt to index a {metaMethod.Type} value");
+				}
+			} else {
+				stackFrame.PC += 1;
+				setResult(LNil.Instance);
+			}
+		}
+
+		public static void TableSetMM(
 			LState state,
 			LStackFrame stackFrame,
 			Func<LTable> getTable,
@@ -74,9 +91,16 @@ namespace LSharp.Transitions.MetaMethod
 				return;
 			}
 
-			var table = getTable();
-			var key = getKey();
+			TableSetRec(state, stackFrame, getTable(), getKey(), getVal);
+		}
 
+		private static void TableSetRec(
+			LState state,
+			LStackFrame stackFrame,
+			LTable table,
+			ILValue key,
+			Func<ILValue> getVal
+		) {
 			var ctx = table.HasValueMaybeUpdate(key);
 
 			if (ctx.HasValue) {
@@ -84,8 +108,19 @@ namespace LSharp.Transitions.MetaMethod
 				stackFrame.PC += 1;
 				return;
 			}
-
-			CallMetaMethod(state, stackFrame, [table, key, getVal()], MetaMethodTag.NewIndex);
+			ILValue? metaMethod = ArithmeticHelper.GetMetaMethod(table, key, MetaMethodTag.NewIndex);
+			if (metaMethod is not null) {
+				if (metaMethod is LTable mmTable) {
+					TableSetRec(state, stackFrame, mmTable, key, getVal);
+				} else if (metaMethod is IClosure mmClosure) {
+					CallMetaMethod(state, stackFrame, [table, key, getVal()], mmClosure, false);
+				} else {
+					throw new LException($"attempt to index a {metaMethod.Type} value");
+				}
+			} else {
+				stackFrame.PC += 1;
+				table.SetValue(key, getVal());
+			}
 		}
 
 		private static ILValue PopMMReturn(LState state, LStackFrame stackFrame) {
@@ -111,11 +146,18 @@ namespace LSharp.Transitions.MetaMethod
 			}
 			var val = getVal();
 			if (attempt(val) is ILValue newVal) {
-				setResult(val);
+				setResult(newVal);
 				stackFrame.PC += 1;
 				return;
 			}
-			CallMetaMethod(state, stackFrame, [val], tag);
+			ILValue? metaMethod = ArithmeticHelper.GetMetaMethod(val, tag);
+			if (metaMethod is IClosure mmClosure) {
+				CallMetaMethod(state, stackFrame, [val], mmClosure, true);
+			} else if (metaMethod is null) {
+				throw new LException("attempted to perform arithmetic operation on a table value");
+			} else {
+				throw new LException($"attempt to call a {(metaMethod ?? LNil.Instance).Type} value");
+			}
 		}
 
 		public static void EqualityMM<T1, T2>(
@@ -123,7 +165,7 @@ namespace LSharp.Transitions.MetaMethod
 			LStackFrame stackFrame,
 			bool k,
 			Func<T1, T2, bool> comparison,
-			Func<(T1, T2)> getVals
+			Func<(T1, T2)> getValues
 		) where T1 : ILValue where T2 : ILValue {
 			if (stackFrame.MetaMethodStalled) {
 				if (ArithmeticHelper.IsTruthy(PopMMReturn(state, stackFrame)) != k)
@@ -132,11 +174,16 @@ namespace LSharp.Transitions.MetaMethod
 					stackFrame.PC += 1;
 				return;
 			}
-			var (lhs, rhs) = getVals();
+			var (lhs, rhs) = getValues();
 
 			if (lhs is LTable && rhs is LTable && !lhs.LEqual(rhs)) {
-				CallMetaMethod(state, stackFrame, [lhs, rhs], MetaMethodTag.Eq);
-				return;
+				var mm = ArithmeticHelper.GetMetaMethod(lhs, rhs, MetaMethodTag.Eq);
+				if (mm is IClosure mmClosure) {
+					CallMetaMethod(state, stackFrame, [lhs, rhs], mmClosure, true);
+					return;
+				} else if (mm is not null) {
+					throw new LException($"attempt to call a {mm.Type} value (metamethod 'eq')");
+				}
 			}
 
 			if (comparison(lhs, rhs) != k)
@@ -151,7 +198,7 @@ namespace LSharp.Transitions.MetaMethod
 			bool k,
 			MetaMethodTag tag,
 			Func<T1, T2, TernaryBool> comparison,
-			Func<(T1, T2)> getVals
+			Func<(T1, T2)> getValues
 		) where T1 : ILValue where T2 : ILValue {
 			if (stackFrame.MetaMethodStalled) {
 				if (ArithmeticHelper.IsTruthy(PopMMReturn(state, stackFrame)) != k)
@@ -160,10 +207,17 @@ namespace LSharp.Transitions.MetaMethod
 					stackFrame.PC += 1;
 				return;
 			}
-			var (lhs, rhs) = getVals();
+			var (lhs, rhs) = getValues();
 			var res = comparison(lhs, rhs);
 			if (res == TernaryBool.Unknown) {
-				CallMetaMethod(state, stackFrame, [lhs, rhs], tag);
+				var metaMethod = ArithmeticHelper.GetMetaMethod(lhs, rhs, MetaMethodTag.Eq);
+				if (metaMethod is IClosure mmClosure) {
+					CallMetaMethod(state, stackFrame, [lhs, rhs], mmClosure, true);
+				} else if (metaMethod is null) {
+					throw new LException($"attempted to compare {lhs.Type} with a {rhs.Type}");
+				} else {
+					throw new LException($"attempt to call a {(metaMethod ?? LNil.Instance).Type} value");
+				}
 				return;
 			}
 
@@ -196,53 +250,15 @@ namespace LSharp.Transitions.MetaMethod
 
 		protected bool CallMetaMethod(LState state, LStackFrame stackFrame, ILValue[] args, MetaMethodTag operation)
 		{
-			MetaMethodHelper.CallMetaMethod(state, stackFrame, args, operation, outputIndex);
+			var metaMethod = ArithmeticHelper.GetMetaMethod(args[0], args[1], operation);
+			if (metaMethod is IClosure mmClosure) {
+				MetaMethodHelper.CallMetaMethod(state, stackFrame, args, mmClosure, outputIndex != -1);
+			} else if (metaMethod is null) {
+				throw new LException($"attempted to compare {args[0].Type} with a {args[1].Type}");
+			} else {
+				throw new LException($"attempt to call a {(metaMethod ?? LNil.Instance).Type} value");
+			}
 			return outputIndex == -1;
 		}
-
-		protected bool UpsertTable(LState state, LStackFrame stackFrame, LTable table, ILValue key, ILValue val)
-		{
-			var updateCtx = table.HasValueMaybeUpdate(key);
-
-			if (!updateCtx.HasValue && table.GetMetaMethod(MetaMethodTag.NewIndex) != null)
-				return CallMetaMethod(state, stackFrame, [table, key, val], MetaMethodTag.NewIndex);
-
-			if (updateCtx.HasValue)
-				table.UpdateValue(updateCtx, val);
-			
-			table.SetValue(key, val);
-
-			return false;
-		}
-	}
-
-	public abstract class EqualityTransition<T1, T2>(bool k) : ITransition
-		where T1 : ILValue 
-		where T2 : ILValue
-	{
-		public void Transfer(LState state, LStackFrame stackFrame)
-		{
-			if (stackFrame.MetaMethodStalled)
-			{
-				var res = MetaMethodHelper.GetResult(state, stackFrame);
-				stackFrame.PC += ArithmeticHelper.IsTruthy(res) == k ? 2 : 1;
-
-				return;
-			}
-
-			var (lhs, rhs) = GetComparedValues(state, stackFrame);
-
-			if (lhs is LTable && rhs is LTable && !lhs.LEqual(rhs))
-			{
-				MetaMethodHelper.CallMetaMethod(state, stackFrame, [lhs, rhs], MetaMethodTag.Eq);
-				return;
-			}
-
-			stackFrame.PC += Comparison(lhs, rhs) == k ? 2 : 1;
-		}
-
-		protected abstract bool Comparison(T1 lhs, T2 rhs);
-
-		protected abstract (T1, T2) GetComparedValues(LState state, LStackFrame stackFrame);
 	}
 }

@@ -3,18 +3,15 @@ using LSharp.Transitions.MetaMethod;
 
 namespace LSharp.Transitions.Table
 {
-	internal class OGetI(byte a, byte b, LInteger c) : MetaMethodTransition(a)
+	internal class OGetI(byte a, byte b, LInteger c) : ITransition
 	{
-		public override bool NormalOrMetaAccess(LState state, LStackFrame stackFrame)
-		{
-			var table = (LTable)state.Stack[stackFrame.FrameBase + b];
-			var val = table.GetValue(c);
-
-			if (val is LNil)
-				return CallMetaMethod(state, stackFrame, [table, c], MetaMethodTag.Index);
-			
-			state.Stack[stackFrame.FrameBase + a] = val;
-			return false;
+		public void Transfer(LState state, LStackFrame stackFrame) {
+			MetaMethodHelper.TableGetMM(
+				state, stackFrame,
+				() => (LTable)state.Stack[stackFrame.FrameBase + b],
+				() => c,
+				(val) => state.Stack[stackFrame.FrameBase + a] = val
+			);
 		}
 	}
 }

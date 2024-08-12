@@ -6,7 +6,7 @@ namespace LSharp.Transitions.Table
 	public class OSetIK(byte a, LInteger b, ILValue kC) : ITransition
 	{
 		public void Transfer(LState state, LStackFrame stackFrame) {
-			MetaMethodHelper.TableSet(
+			MetaMethodHelper.TableSetMM(
 				state, stackFrame,
 				() => (LTable)state.Stack[stackFrame.FrameBase + a],
 				() => b,

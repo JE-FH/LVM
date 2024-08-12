@@ -8,8 +8,7 @@ using System.Threading.Tasks;
 namespace LSharp.LTypes
 {
 	[DebuggerDisplay("{Value}")]
-	public class LInteger(long value) : ILValue
-	{
+	public class LInteger(long value) : ILValue, IAnyNumber<long> {
 		public long Value => value;
 
 		public uint LHash => unchecked((uint)value.GetHashCode());

@@ -11,6 +11,7 @@ using LSharp.Transitions.UpVal;
 using LuaByteCode;
 using LuaByteCode.LuaCConstructs;
 using LuaByteCode.LuaCConstructs.Types;
+using System.Diagnostics;
 using System.Text;
 
 namespace LSharp
@@ -20,18 +21,13 @@ namespace LSharp
 		public LStack Stack { get; } = new();
 		public List<IStackFrame> CallStack { get; } = [];
 		public LTable EnvironmentTable { get; } = new();
-
+		private List<ITransition> _trace = new();
 		public LClosure ByteCodeToClosure(LuaCFile file)
 		{
 			return LuaFileToClosure(file);
 		}
 
-		public void Call(LClosure closure, ILValue[] args)
-		{
-			CallAt(Stack.Top, closure, -1, args);
-		}
-
-		public void Call(CSClosure closure, ILValue[] args)
+		public void Call(IClosure closure, ILValue[] args)
 		{
 			CallAt(Stack.Top, closure, -1, args);
 		}
@@ -81,6 +77,7 @@ namespace LSharp
 			else if (frame is LStackFrame lStackFrame)
 			{
 				var transition = lStackFrame.Closure.Prototype.Transitions[lStackFrame.PC];
+				_trace.Add(transition);
 				transition.Transfer(this, lStackFrame);
 			}
 			else
@@ -125,6 +122,14 @@ namespace LSharp
 		private T ConstantToSpecific<T>(ILuaConstant constant) where T : ILValue
 		{
 			return (T)ConstantToValue(constant);
+		}
+
+		private ILValue ConstantToSpecific<T1, T2>(ILuaConstant constant) where T1 : ILValue where T2 : ILValue {
+			var val = ConstantToValue(constant);
+			return val switch {
+				T1 t1 => t1,
+				_ => (T2)val,
+			};
 		}
 
 		private IEnumerable<ITransition> ToTransitions(LuaCPrototype prototype)
@@ -187,8 +192,18 @@ namespace LSharp
 						: new OSelfR(ins.A, ins.B, ins.C),
 
 					InstructionEnum.AddI => new OAddI(ins.A, ins.B, ins.SC),
-
 					InstructionEnum.Add => new OAdd(ins.A, ins.B, ins.C),
+
+					InstructionEnum.ModK => ConstantToSpecific<LNumber, LInteger>(K[ins.C]) switch {
+						LNumber n => new OModK<double>(ins.A, ins.B, n),
+						LInteger n => new OModK<long>(ins.A, ins.B, n),
+						_ => throw new NotImplementedException()
+					},
+					InstructionEnum.MulK => ConstantToSpecific<LNumber, LInteger>(K[ins.C]) switch {
+						LNumber n => new OMulK<double>(ins.A, ins.B, n),
+						LInteger n => new OMulK<long>(ins.A, ins.B, n),
+						_ => throw new NotImplementedException()
+					},
 
 					InstructionEnum.Jmp => new OJmp(ins.SJ),
 

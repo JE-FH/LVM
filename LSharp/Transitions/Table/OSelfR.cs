@@ -3,22 +3,20 @@ using LSharp.Transitions.MetaMethod;
 
 namespace LSharp.Transitions.Table
 {
-	internal class OSelfR(byte a, byte b, byte c) : MetaMethodTransition(a)
+	internal class OSelfR(byte a, byte b, byte c) : ITransition
 	{
-		public override bool NormalOrMetaAccess(LState state, LStackFrame stackFrame)
-		{
-			state.Stack[stackFrame.FrameBase + a + 1] = 
-				state.Stack[stackFrame.FrameBase + b];
+		public void Transfer(LState state, LStackFrame stackFrame) {
+			if (!stackFrame.MetaMethodStalled) {
+				state.Stack[stackFrame.FrameBase + a + 1] =
+					state.Stack[stackFrame.FrameBase + b];
+			}
 
-			var table = (LTable)state.Stack[stackFrame.FrameBase + b];
-			var key = (LString)state.Stack[stackFrame.FrameBase + c];
-			var val = table.GetValue(key);
-
-			if (val is LNil)
-				return CallMetaMethod(state, stackFrame, [table, key], MetaMethodTag.Index);
-
-			state.Stack[stackFrame.FrameBase + a] = val;
-			return false;
+			MetaMethodHelper.TableGetMM(
+				state, stackFrame,
+				() => (LTable)state.Stack[stackFrame.FrameBase + b],
+				() => (LString)state.Stack[stackFrame.FrameBase + c],
+				(val) => state.Stack[stackFrame.FrameBase + a] = val
+			);
 		}
 	}
 }

@@ -137,20 +137,38 @@ namespace LSharp.Helpers
 			return valueA.LEqual(valueB);
 		}
 
-		public static ILValue GetMetaMethod(ILValue aValue, ILValue bValue, MetaMethodTag metaMethodTag)
+		public static ILValue? GetMetaMethod(ILValue aValue, ILValue bValue, MetaMethodTag metaMethodTag)
 		{
 			return (aValue, bValue) switch
 			{
-				(LTable a, LTable b) => a.MetaTable?.GetMetaMethod(metaMethodTag) ?? b.MetaTable?.GetMetaMethod(metaMethodTag) ?? LNil.Instance,
-				(LTable a, _) => a.MetaTable?.GetMetaMethod(metaMethodTag) ?? LNil.Instance,
-				(_, LTable b) => b.MetaTable?.GetMetaMethod(metaMethodTag) ?? LNil.Instance,
-				_ => throw new LException("Invalid arithmetic expression")
+				(LTable a, LTable b) => a.GetMetaMethod(metaMethodTag) ?? b.GetMetaMethod(metaMethodTag) ?? null,
+				(LTable a, _) => a.GetMetaMethod(metaMethodTag) ?? null,
+				(_, LTable b) => b.GetMetaMethod(metaMethodTag) ?? null,
+				_ => null
+			};
+		}
+
+		public static ILValue? GetMetaMethod(ILValue value, MetaMethodTag tag) {
+			return value switch {
+				LTable table => table.GetMetaMethod(tag),
+				_ => null
 			};
 		}
 
 		public static bool IsTruthy(ILValue value)
 		{
 			return value is not LNil or LBool || (value is LBool b && b.Value);
+		}
+
+		public static void ArithK<T>(LState state, LStackFrame stackFrame, byte a, byte b, T Kc, Func<ILValue, T, ILValue?> func) {
+			var lhs = state.Stack[stackFrame.FrameBase + b];
+			var res = func(lhs, Kc);
+			if (res is not null) {
+				state.Stack[stackFrame.FrameBase + a] = res;
+				stackFrame.PC += 2;
+				return;
+			}
+			stackFrame.PC += 1;
 		}
 	}
 }

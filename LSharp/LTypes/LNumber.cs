@@ -6,8 +6,7 @@ using System.Threading.Tasks;
 
 namespace LSharp.LTypes
 {
-	public class LNumber(double value) : ILValue
-	{
+	public class LNumber(double value) : ILValue, IAnyNumber<double> {
 		public double Value => value;
 		public uint LHash => unchecked((uint)value.GetHashCode());
 		public string Type => "number";

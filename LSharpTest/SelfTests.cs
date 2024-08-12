@@ -1,4 +1,5 @@
 ﻿using LSharp;
+using LSharp.Library.IO;
 using LSharp.LTypes;
 using LuaByteCode;
 using LuaNativeCompiler;
@@ -25,6 +26,9 @@ namespace LSharpTest
 			var byteCode = byteCodeReader.ParseLuaCFile(compiled);
 
 			var lState = new LState();
+
+			IOLib.LoadLibrary(lState);
+
 			var closure = lState.ByteCodeToClosure(byteCode);
 
 			lState.Call(closure, []);
