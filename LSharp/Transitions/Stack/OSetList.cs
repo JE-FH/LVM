@@ -17,6 +17,8 @@ namespace LSharp.Transitions.Stack
             {
                 table.SetValue(new LInteger(i + c), state.Stack[stackFrame.FrameBase + i + a]);
             }
+
+            stackFrame.PC += 1;
         }
     }
 }

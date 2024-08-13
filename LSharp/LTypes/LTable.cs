@@ -19,10 +19,10 @@ namespace LSharp.LTypes
 		Slot[] _slots;
 		private int _nextSlotIndex = 0;
 		private ILValue?[] _metaMethods = Array.Empty<ILValue>();
+		private List<ILValue> _consecutiveValues;
 
 		private void RecalculateBuckets()
 		{
-
 			_buckets = Enumerable.Range(0, HashUtils.GetPrime(_slots.Length))
 				.Select(_ => -1)
 				.ToArray();
@@ -69,9 +69,30 @@ namespace LSharp.LTypes
 			}
 			return (true, slotIndex);
 		}
+		
+		private void AppendConsecutive(ILValue value) {
+			_consecutiveValues.Add(value);
+			
+		}
 
 		private void UpsertValue(ILValue key, ILValue value)
 		{
+			if (key is LInteger i)
+			{
+				if (i.Value > 0 && _consecutiveValues.Count <= i.Value)
+				{
+					_consecutiveValues[(int)i.Value] = value;
+					return;
+				}
+
+				if (i.Value == _consecutiveValues.Count + 1)
+				{
+					AppendConsecutive(value);
+					return;
+				}
+			}
+			
+
 			var (found, slotIndex) = GetSlotIndexOrPreviousSlot(key);
 			if (found)
 			{
@@ -125,6 +146,10 @@ namespace LSharp.LTypes
 
 		public ILValue GetValue(ILValue index)
 		{
+			if (_consecutiveValues.Count > 0 && index is LInteger i && i.Value > 0 && _consecutiveValues.Count >= i.Value)
+			{
+				return _consecutiveValues[(int) i.Value];
+			}
 			var (found, slotIndex) = GetSlotIndexOrPreviousSlot(index);
 			if (found)
 			{
@@ -140,13 +165,24 @@ namespace LSharp.LTypes
 		
 		public MaybeSetContext HasValueMaybeUpdate(ILValue key)
 		{
+			if (_consecutiveValues.Count > 0 && key is LInteger i && i.Value > 0 && _consecutiveValues.Count <= i.Value)
+			{
+				return new MaybeSetContext(-i.Value - 1);
+			}
 			var (found, slotIndex) = GetSlotIndexOrPreviousSlot(key);
 			return found ? new MaybeSetContext(slotIndex) : new MaybeSetContext();
 		}
 
 		public void UpdateValue(MaybeSetContext ctx, ILValue value)
 		{
-			_slots[ctx.SlotIndex].value = value;
+			if (ctx.SlotIndex < 0)
+			{
+				_consecutiveValues[(int)(-ctx.SlotIndex - 1)] = value;
+			}
+			else
+			{
+				_slots[ctx.SlotIndex].value = value;
+			}
 		}
 
 		public ILValue? GetMetaMethod(MetaMethodTag tag)
@@ -170,7 +206,7 @@ namespace LSharp.LTypes
 
 		public long GetLength()
 		{
-			return 0;
+			return _consecutiveValues.Count;
 		}
 
 		public LTable? MetaTable { get; set; }
@@ -205,9 +241,9 @@ namespace LSharp.LTypes
 
 		public readonly struct MaybeSetContext
 		{
-			internal readonly int SlotIndex;
-			public bool HasValue => SlotIndex > -1;
-			internal MaybeSetContext(int _slotIndex)
+			internal readonly long SlotIndex;
+			public bool HasValue => SlotIndex != -1;
+			internal MaybeSetContext(long _slotIndex)
 			{
 				SlotIndex = _slotIndex;
 			}

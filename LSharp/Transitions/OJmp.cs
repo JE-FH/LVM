@@ -16,6 +16,6 @@ namespace LSharp.Transitions
 		}
 
 		private string GetDebuggerDisplay()
-			=> $"Jmp {sJ}";
+			=> $"PC += {sJ + 1} {{JMP {sJ}}}";
 	}
 }

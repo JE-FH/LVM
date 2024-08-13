@@ -18,5 +18,10 @@ namespace LSharp.LTypes
 
 		public bool LEqual(ILValue other) =>
 			other is LString lString && lString.Value == value;
+
+		public override string ToString()
+		{
+			return value;
+		}
 	}
 }

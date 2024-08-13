@@ -1,13 +1,15 @@
 ﻿using LSharp.LTypes;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace LSharp.Transitions.CallStack
 {
-    public class OClosure(byte a, LPrototype prototype) : ITransition
+	[DebuggerDisplay($"{{{nameof(GetDebuggerDisplay)}(),nq}}")]
+	public class OClosure(byte a, LPrototype prototype) : ITransition
     {
         public void Transfer(LState state, LStackFrame stackFrame)
         {
@@ -25,5 +27,8 @@ namespace LSharp.Transitions.CallStack
 
             stackFrame.PC += 1;
         }
-    }
+
+        private string GetDebuggerDisplay() =>
+            $"R[{a}] = Closure() {{CLOSURE {a}}}";
+	}
 }
