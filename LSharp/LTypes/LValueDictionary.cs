@@ -4,11 +4,15 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using static LSharp.LTypes.LTable;
 
 namespace LSharp.LTypes
 {
-	[DebuggerTypeProxy(typeof(LuaTableDebugView))]
+	public enum TableKeyReference : int
+	{
+		Invalid = -1,
+	};
+	
+	[DebuggerTypeProxy(typeof(LValueDictionary<dynamic>))]
 	public class LValueDictionary<T>
 	{
 		[DebuggerDisplay("{key} = {value}")]
@@ -17,7 +21,7 @@ namespace LSharp.LTypes
 			public int next;
 			public uint hashCode;
 			public ILValue key;
-			public ILValue value;
+			public T value;
 		}
 
 		int[] _buckets = [];
@@ -73,7 +77,7 @@ namespace LSharp.LTypes
 			return (true, slotIndex);
 		}
 
-		private void UpsertValue(ILValue key, ILValue value)
+		private void UpsertValue(ILValue key, T value)
 		{
 			var (found, slotIndex) = GetSlotIndexOrPreviousSlot(key);
 			if (found)
@@ -113,6 +117,57 @@ namespace LSharp.LTypes
 			}
 
 			_nextSlotIndex += 1;
+		}
+
+		public void SetValue(ILValue key, T value)
+		{
+			UpsertValue(key, value);
+		}
+
+		public TableKeyReference HasValueMaybeUpdate(ILValue key)
+		{
+			var (found, slotIndex) = GetSlotIndexOrPreviousSlot(key);
+			return found ? (TableKeyReference) slotIndex : TableKeyReference.Invalid;
+		}
+
+		public void UpdateValue(TableKeyReference ctx, T value)
+		{
+			_slots[(int) ctx].value = value;
+		}
+
+		public T? GetValue(ILValue index)
+		{
+			var (found, slotIndex) = GetSlotIndexOrPreviousSlot(index);
+			if (found)
+			{
+				return _slots[slotIndex].value;
+			}
+			return default;
+		}
+
+		public IEnumerable<(ILValue, T)> values => _slots
+			.Take(_nextSlotIndex)
+			.Select(x => (x.key, x.value))
+			.AsEnumerable();
+
+		internal class LValueDictionaryDebugView
+		{
+			private LValueDictionary<T> table;
+			public LValueDictionaryDebugView(LValueDictionary<T> table)
+			{
+				this.table = table;
+			}
+
+			[DebuggerBrowsable(DebuggerBrowsableState.RootHidden)]
+			public Slot[] slots
+			{
+				get
+				{
+					return table._slots
+						.Take(table._nextSlotIndex)
+						.ToArray();
+				}
+			}
 		}
 	}
 }

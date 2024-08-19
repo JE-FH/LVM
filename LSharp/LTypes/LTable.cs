@@ -6,183 +6,62 @@ namespace LSharp.LTypes
 	[DebuggerTypeProxy(typeof(LuaTableDebugView))]
 	public class LTable : ILValue
 	{
-		[DebuggerDisplay("{key} = {value}")]
-		internal struct Slot
-		{
-			public int next;
-			public uint hashCode;
-			public ILValue key;
-			public ILValue value;
-		}
+		LValueDictionary<ILValue> _dictionary = new();
 
-		int[] _buckets;
-		Slot[] _slots;
-		private int _nextSlotIndex = 0;
 		private ILValue?[] _metaMethods = Array.Empty<ILValue>();
-		private List<ILValue> _consecutiveValues;
+		private List<ILValue> _consecutiveValues = new();
 
-		private void RecalculateBuckets()
+		public void SetValue(ILValue key, ILValue value)
 		{
-			_buckets = Enumerable.Range(0, HashUtils.GetPrime(_slots.Length))
-				.Select(_ => -1)
-				.ToArray();
-			for (int i = 0; i < _slots.Length; i++)
+
+			if (key is LInteger iKey && iKey.Value > 0)
 			{
-				_slots[i].next = -1;
-			}
-			for (int slotIndex = 0; slotIndex < _nextSlotIndex; slotIndex++)
-			{
-				var index = _slots[slotIndex].hashCode % _buckets.Length;
-				if (_buckets[index] >= 0)
+				if (_consecutiveValues.Count >= iKey.Value)
 				{
-					var lastSlotIndex = _buckets[index];
-					while (_slots[lastSlotIndex].next > 0)
-					{
-						lastSlotIndex = _slots[lastSlotIndex].next;
+					_consecutiveValues[(int)iKey.Value - 1] = value;
+					return;
+				}
+				else if (_consecutiveValues.Count + 1 >= iKey.Value)
+				{
+					_consecutiveValues.Add(value);
+					for (int i = (int)iKey.Value + 1; ;i++) {
+						var val = _dictionary.GetValue(new LInteger(i));
+						if (val == null)
+							break;
+
+						_consecutiveValues.Add(val);
 					}
-					_slots[lastSlotIndex].next = slotIndex;
-				}
-				else
-				{
-					_buckets[index] = slotIndex;
-				}
-			}
-		}
-
-		private (bool, int) GetSlotIndexOrPreviousSlot(ILValue key)
-		{
-			if (_buckets.Length == 0)
-				return (false, -1);
-			var hash = key.LHash;
-			var slotIndex = _buckets[hash % _buckets.Length];
-			if (slotIndex == -1)
-			{
-				return (false, -1);
-			}
-			while (hash != _slots[slotIndex].hashCode || !_slots[slotIndex].key.LEqual(key))
-			{
-				if (_slots[slotIndex].next == -1)
-				{
-					return (false, slotIndex);
-				}
-				slotIndex = _slots[slotIndex].next;
-			}
-			return (true, slotIndex);
-		}
-		
-		private void AppendConsecutive(ILValue value) {
-			_consecutiveValues.Add(value);
-			
-		}
-
-		private void UpsertValue(ILValue key, ILValue value)
-		{
-			if (key is LInteger i)
-			{
-				if (i.Value > 0 && _consecutiveValues.Count <= i.Value)
-				{
-					_consecutiveValues[(int)i.Value] = value;
-					return;
-				}
-
-				if (i.Value == _consecutiveValues.Count + 1)
-				{
-					AppendConsecutive(value);
 					return;
 				}
 			}
-			
+			_dictionary.SetValue(key, value);
+		}
 
-			var (found, slotIndex) = GetSlotIndexOrPreviousSlot(key);
-			if (found)
+		public TableKeyReference HasValueMaybeUpdate(ILValue key)
+		{
+			if (key is LInteger i && i.Value > 0 && _consecutiveValues.Count >= i.Value)
 			{
-				_slots[slotIndex].value = value;
+				return (TableKeyReference) (-i.Value - 1);
+			}
+			return _dictionary.HasValueMaybeUpdate(key);
+		}
+
+		public void UpdateValue(TableKeyReference ctx, ILValue value)
+		{
+			if (ctx < 0) {
+				_consecutiveValues[-((int)ctx) - 2] = value;
 				return;
 			}
-
-			if (_nextSlotIndex + 1 >= _buckets.Length)
-			{
-				RecalculateBuckets();
-				(_, slotIndex) = GetSlotIndexOrPreviousSlot(key);
-			}
-
-			var hash = key.LHash;
-
-			if (_nextSlotIndex >= _slots.Length)
-			{
-				Array.Resize(ref _slots, Math.Max(_slots.Length * 2, 2));
-			}
-
-			_slots[_nextSlotIndex] = new Slot
-			{
-				hashCode = hash,
-				next = -1,
-				key = key,
-				value = value
-			};
-
-			if (slotIndex < 0)
-			{
-				_buckets[hash % _buckets.Length] = _nextSlotIndex;
-			}
-			else
-			{
-				_slots[slotIndex].next = _nextSlotIndex;
-			}
-
-			_nextSlotIndex += 1;
+			_dictionary.UpdateValue(ctx, value);
 		}
 
-		public LTable()
+		public ILValue GetValue(ILValue key)
 		{
-			_buckets = [];
-			_slots = [];
-		}
-
-		public ILValue this[ILValue value]
-		{
-			get => GetValue(value);
-		}
-
-		public ILValue GetValue(ILValue index)
-		{
-			if (_consecutiveValues.Count > 0 && index is LInteger i && i.Value > 0 && _consecutiveValues.Count >= i.Value)
+			if (key is LInteger i && i.Value > 0 && _consecutiveValues.Count >= i.Value)
 			{
-				return _consecutiveValues[(int) i.Value];
+				return _consecutiveValues[(int) i.Value - 1];
 			}
-			var (found, slotIndex) = GetSlotIndexOrPreviousSlot(index);
-			if (found)
-			{
-				return _slots[slotIndex].value;
-			}
-			return LNil.Instance;
-		}
-
-		public void SetValue(ILValue index, ILValue value)
-		{
-			UpsertValue(index, value);
-		}
-		
-		public MaybeSetContext HasValueMaybeUpdate(ILValue key)
-		{
-			if (_consecutiveValues.Count > 0 && key is LInteger i && i.Value > 0 && _consecutiveValues.Count <= i.Value)
-			{
-				return new MaybeSetContext(-i.Value - 1);
-			}
-			var (found, slotIndex) = GetSlotIndexOrPreviousSlot(key);
-			return found ? new MaybeSetContext(slotIndex) : new MaybeSetContext();
-		}
-
-		public void UpdateValue(MaybeSetContext ctx, ILValue value)
-		{
-			if (ctx.SlotIndex < 0)
-			{
-				_consecutiveValues[(int)(-ctx.SlotIndex - 1)] = value;
-			}
-			else
-			{
-				_slots[ctx.SlotIndex].value = value;
-			}
+			return _dictionary.GetValue(key) ?? LNil.Instance;
 		}
 
 		public ILValue? GetMetaMethod(MetaMethodTag tag)
@@ -228,31 +107,11 @@ namespace LSharp.LTypes
 			}
 
 			[DebuggerBrowsable(DebuggerBrowsableState.RootHidden)]
-			public Slot[] slots
-			{
-				get
-				{
-					return table._slots
-						.Take(table._nextSlotIndex)
-						.ToArray();
-				}
-			}
-		}
-
-		public readonly struct MaybeSetContext
-		{
-			internal readonly long SlotIndex;
-			public bool HasValue => SlotIndex != -1;
-			internal MaybeSetContext(long _slotIndex)
-			{
-				SlotIndex = _slotIndex;
-			}
-
-			public MaybeSetContext()
-			{
-				SlotIndex = -1;
-			}
-
+			public (ILValue, ILValue)[] keys =>
+				table._consecutiveValues
+					.Select((x, i) => ((ILValue) new LInteger(i + 1), x))
+					.Concat(table._dictionary.values)
+					.ToArray();
 		}
 	}
 }

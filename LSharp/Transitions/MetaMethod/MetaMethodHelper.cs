@@ -103,7 +103,7 @@ namespace LSharp.Transitions.MetaMethod
 		) {
 			var ctx = table.HasValueMaybeUpdate(key);
 
-			if (ctx.HasValue) {
+			if (ctx == TableKeyReference.Invalid) {
 				table.UpdateValue(ctx, getVal());
 				stackFrame.PC += 1;
 				return;
