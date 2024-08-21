@@ -4,24 +4,26 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace LSharp.LTypes
 {
-	public enum TableKeyReference : int
+	public enum TableEntryReference : int
 	{
 		Invalid = -1,
 	};
 	
-	[DebuggerTypeProxy(typeof(LValueDictionary<dynamic>))]
-	public class LValueDictionary<T>
+	[DebuggerTypeProxy(typeof(LValueDictionary))]
+	public class LValueDictionary
 	{
 		[DebuggerDisplay("{key} = {value}")]
+		//TODO: possible bottleneck for cache lines
 		internal struct Slot
 		{
-			public int next;
-			public uint hashCode;
 			public ILValue key;
-			public T value;
+			public ILValue value;
+			public uint hashCode;
+			public int next;
 		}
 
 		int[] _buckets = [];
@@ -37,9 +39,12 @@ namespace LSharp.LTypes
 			{
 				_slots[i].next = -1;
 			}
-			for (int slotIndex = 0; slotIndex < _nextSlotIndex; slotIndex++)
+
+			var wantedSlots = _slots.Take(_nextSlotIndex).Where(slot => slot.value is not null).Select((slot, i) => (i, slot));
+
+			foreach (var (slotIndex, slot) in wantedSlots)
 			{
-				var index = _slots[slotIndex].hashCode % _buckets.Length;
+				var index = slot.hashCode % _buckets.Length;
 				if (_buckets[index] >= 0)
 				{
 					var lastSlotIndex = _buckets[index];
@@ -53,6 +58,7 @@ namespace LSharp.LTypes
 				{
 					_buckets[index] = slotIndex;
 				}
+
 			}
 		}
 
@@ -66,18 +72,21 @@ namespace LSharp.LTypes
 			{
 				return (false, -1);
 			}
-			while (hash != _slots[slotIndex].hashCode || !_slots[slotIndex].key.LEqual(key))
+
+			Slot slot = _slots[slotIndex];
+
+			while (slot.value is not null || hash != slot.hashCode || !slot.key.LEqual(key))
 			{
-				if (_slots[slotIndex].next == -1)
+				if (slot.next == -1)
 				{
 					return (false, slotIndex);
 				}
-				slotIndex = _slots[slotIndex].next;
+				slot = _slots[slot.next];
 			}
 			return (true, slotIndex);
 		}
 
-		private void UpsertValue(ILValue key, T value)
+		private void UpsertValue(ILValue key, ILValue value)
 		{
 			var (found, slotIndex) = GetSlotIndexOrPreviousSlot(key);
 			if (found)
@@ -119,41 +128,52 @@ namespace LSharp.LTypes
 			_nextSlotIndex += 1;
 		}
 
-		public void SetValue(ILValue key, T value)
+		public void SetValue(ILValue key, ILValue value)
 		{
 			UpsertValue(key, value);
 		}
 
-		public TableKeyReference HasValueMaybeUpdate(ILValue key)
+		public TableEntryReference GetEntryReference(ILValue key)
 		{
 			var (found, slotIndex) = GetSlotIndexOrPreviousSlot(key);
-			return found ? (TableKeyReference) slotIndex : TableKeyReference.Invalid;
+			return found ? (TableEntryReference) slotIndex : TableEntryReference.Invalid;
 		}
 
-		public void UpdateValue(TableKeyReference ctx, T value)
+		public void UpdateValue(TableEntryReference ctx, ILValue value)
 		{
 			_slots[(int) ctx].value = value;
 		}
 
-		public T? GetValue(ILValue index)
+		public ILValue GetValue(ILValue index)
 		{
 			var (found, slotIndex) = GetSlotIndexOrPreviousSlot(index);
 			if (found)
 			{
 				return _slots[slotIndex].value;
 			}
-			return default;
+			return LNil.Instance;
 		}
 
-		public IEnumerable<(ILValue, T)> values => _slots
+		public ILValue GetValue(TableEntryReference entryReference)
+		{
+			return _slots[(int)entryReference].value ?? LNil.Instance;
+		}
+
+		public void RemoveValue(TableEntryReference reference)
+		{
+			_slots[(int)reference].value = default;
+			_slots[(int)reference].key = LNil.Instance;
+		}
+
+		public IEnumerable<(ILValue, ILValue)> values => _slots
 			.Take(_nextSlotIndex)
 			.Select(x => (x.key, x.value))
 			.AsEnumerable();
 
 		internal class LValueDictionaryDebugView
 		{
-			private LValueDictionary<T> table;
-			public LValueDictionaryDebugView(LValueDictionary<T> table)
+			private LValueDictionary table;
+			public LValueDictionaryDebugView(LValueDictionary table)
 			{
 				this.table = table;
 			}

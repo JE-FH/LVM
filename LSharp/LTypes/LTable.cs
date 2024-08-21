@@ -6,7 +6,7 @@ namespace LSharp.LTypes
 	[DebuggerTypeProxy(typeof(LuaTableDebugView))]
 	public class LTable : ILValue
 	{
-		LValueDictionary<ILValue> _dictionary = new();
+		LValueDictionary _dictionary = new();
 
 		private ILValue?[] _metaMethods = Array.Empty<ILValue>();
 		private List<ILValue> _consecutiveValues = new();
@@ -25,11 +25,12 @@ namespace LSharp.LTypes
 				{
 					_consecutiveValues.Add(value);
 					for (int i = (int)iKey.Value + 1; ;i++) {
-						var val = _dictionary.GetValue(new LInteger(i));
-						if (val == null)
+						var reference = _dictionary.GetEntryReference(new LInteger(i));
+						if (reference == TableEntryReference.Invalid)
 							break;
 
-						_consecutiveValues.Add(val);
+						_consecutiveValues.Add(_dictionary.GetValue(reference));
+						_dictionary.RemoveValue(reference);
 					}
 					return;
 				}
@@ -37,22 +38,30 @@ namespace LSharp.LTypes
 			_dictionary.SetValue(key, value);
 		}
 
-		public TableKeyReference HasValueMaybeUpdate(ILValue key)
+		public TableEntryReference HasValueMaybeUpdate(ILValue key)
 		{
 			if (key is LInteger i && i.Value > 0 && _consecutiveValues.Count >= i.Value)
 			{
-				return (TableKeyReference) (-i.Value - 1);
+				return (TableEntryReference) (-i.Value - 1);
 			}
-			return _dictionary.HasValueMaybeUpdate(key);
+			return _dictionary.GetEntryReference(key);
 		}
 
-		public void UpdateValue(TableKeyReference ctx, ILValue value)
+		public void UpdateValue(TableEntryReference ctx, ILValue value)
 		{
 			if (ctx < 0) {
 				_consecutiveValues[-((int)ctx) - 2] = value;
 				return;
 			}
-			_dictionary.UpdateValue(ctx, value);
+
+			if (value is LNil)
+			{
+				_dictionary.RemoveValue(ctx);
+			}
+			else
+			{
+				_dictionary.UpdateValue(ctx, value);
+			}
 		}
 
 		public ILValue GetValue(ILValue key)
@@ -61,18 +70,12 @@ namespace LSharp.LTypes
 			{
 				return _consecutiveValues[(int) i.Value - 1];
 			}
-			return _dictionary.GetValue(key) ?? LNil.Instance;
+			return _dictionary.GetValue(key);
 		}
 
 		public ILValue? GetMetaMethod(MetaMethodTag tag)
 		{
-			if (MetaTable is null) {
-				return null;
-			} else {
-				var mm = MetaTable.GetActualMetaMethod(tag);
-				return mm;
-			}
-			
+			return MetaTable?.GetActualMetaMethod(tag);
 		}
 
 		private ILValue? GetActualMetaMethod(MetaMethodTag tag) {
